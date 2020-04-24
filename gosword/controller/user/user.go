@@ -2,7 +2,7 @@ package user
 
 import (
 	"encoding/json"
-	"go-sword/gosword/model/goadmin_users"
+	"go-sword/gosword/model"
 	"go-sword/response"
 	"io/ioutil"
 	"log"
@@ -13,7 +13,7 @@ import (
 
 func List(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		sqls := []goadmin_users.GoadminUsers{}
+		sqls := []model.GoadminUsers{}
 		db.Find(&sqls)
 
 		ret := response.Ret{
@@ -53,7 +53,7 @@ func Delete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 			return
 		}
 
-		sql := goadmin_users.GoadminUsers{
+		sql := model.GoadminUsers{
 			ID: data["id"],
 		}
 

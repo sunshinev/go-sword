@@ -2,7 +2,7 @@ package goadmin_role_users
 
 import (
 	"encoding/json"
-	"go-sword/go-sword-app/model/goadmin_role_users"
+	"go-sword/go-sword-app/model"
 	"go-sword/response"
 	"io/ioutil"
 	"log"
@@ -13,7 +13,7 @@ import (
 
 func List(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		sqls := []goadmin_role_users.GoadminRoleUsers{}
+		sqls := []model.GoadminRoleUsers{}
 		db.Find(&sqls)
 
 		ret := response.Ret{
@@ -53,7 +53,7 @@ func Delete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 			return
 		}
 
-		sql := goadmin_role_users.GoadminRoleUsers{
+		sql := model.GoadminRoleUsers{
 			ID: data["id"],
 		}
 
@@ -86,7 +86,7 @@ func Create(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 			return
 		}
 
-		data := goadmin_role_users.GoadminRoleUsers{}
+		data := model.GoadminRoleUsers{}
 		err = json.Unmarshal(body, &data)
 		if err != nil {
 			log.Printf("%v", err)
@@ -122,7 +122,7 @@ func Edit(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		data := goadmin_role_users.GoadminRoleUsers{}
+		data := model.GoadminRoleUsers{}
 		err = json.Unmarshal(body, &data)
 		if err != nil {
 			log.Printf("%v", err)
@@ -169,7 +169,7 @@ func Detail(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 			return
 		}
 
-		data := goadmin_role_users.GoadminRoleUsers{}
+		data := model.GoadminRoleUsers{}
 
 		db.First(&data, params["id"])
 

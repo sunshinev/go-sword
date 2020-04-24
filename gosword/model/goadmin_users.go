@@ -1,4 +1,4 @@
-package goadmin_users
+package model
 
 import "time"
 

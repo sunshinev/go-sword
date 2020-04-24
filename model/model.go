@@ -71,8 +71,8 @@ func (m *ModelCreate) Preview(c *config.Db, table string) {
 	m.parseTable(c, table)
 	// Model
 	var modelFile = &FileInstance{
-		FilePath:    strings.Join([]string{"model", m.TableName, "model.go"}, string(os.PathSeparator)),
-		FileName:    "model.go",
+		FilePath:    strings.Join([]string{"model", m.TableName + ".go"}, string(os.PathSeparator)),
+		FileName:    m.TableName + ".go",
 		FileContent: m.createModelContent(),
 	}
 
@@ -173,7 +173,7 @@ func (m *ModelCreate) createModelContent() string {
 	// Modify m.Struc & add import
 	if strings.Contains(string(m.Struc), "time.Time") {
 		str := "package " + m.PackageName
-		newStr := str + `
+		newStr := "package model" + `
 import "time"
 `
 		return strings.Replace(string(m.Struc), str, newStr, 1)
@@ -197,8 +197,8 @@ func (m *ModelCreate) createControllerContent() string {
 
 	// replace
 	packageName := m.TableName
-	modelStruct := m.TableName + "." + m.StructName
-	importModel := m.config.ModuleName + "/" + m.config.RootPath + "/model/" + m.TableName
+	modelStruct := "model." + m.StructName
+	importModel := m.config.ModuleName + "/" + m.config.RootPath + "/model"
 
 	content := string(data)
 
