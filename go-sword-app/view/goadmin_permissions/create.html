@@ -1,7 +1,7 @@
 <template>
     <div class="layout">
         <i-breadcrumb :style="{margin: '24px 24px'}">
-            <i-breadcrumb-item>goadmin_roles</i-breadcrumb-item>
+            <i-breadcrumb-item>goadmin_permissions</i-breadcrumb-item>
             <i-breadcrumb-item>list</i-breadcrumb-item>
         </i-breadcrumb>
         <i-content :style="{padding: '24px', minHeight: '280px', background: '#fff'}">
@@ -103,6 +103,8 @@
 {title:'%!s(int=2)', key:'%!s(int=2)'},
 {title:'%!s(int=3)', key:'%!s(int=3)'},
 {title:'%!s(int=4)', key:'%!s(int=4)'},
+{title:'%!s(int=5)', key:'%!s(int=5)'},
+{title:'%!s(int=6)', key:'%!s(int=6)'},
 
                     {title:'operate', slot:'detail_button', width: 250}
                 ],
@@ -113,6 +115,8 @@
 '%!s(int=2)',
 '%!s(int=3)',
 '%!s(int=4)',
+'%!s(int=5)',
+'%!s(int=6)',
 
                 ]
             }
@@ -147,13 +151,13 @@
             },
             invokeDetail: function(row) {
                 // console.info(this.$route)
-                this.$router.push({path:'/goadmin_roles/detail',query:{id:row.id}})
+                this.$router.push({path:'/goadmin_permissions/detail',query:{id:row.id}})
             },
             invokeEdit: function(row) {
-                this.$router.push({path:'/goadmin_roles/edit',query:{id:row.id}})
+                this.$router.push({path:'/goadmin_permissions/edit',query:{id:row.id}})
             },
             invokeCreate: function() {
-                this.$router.push({path:'/goadmin_roles/create'})
+                this.$router.push({path:'/goadmin_permissions/create'})
             },
             invokeDelete: function(row) {
                 // modal

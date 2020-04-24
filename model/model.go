@@ -19,12 +19,18 @@ type ModelCreate struct {
 	TableName   string
 	// Files need to generate
 	FileList []*FileInstance
+	config   *config.Config
 }
 
 type FileInstance struct {
 	FileName    string
 	FilePath    string
 	FileContent string
+}
+
+func (m *ModelCreate) Init(c *config.Config) *ModelCreate {
+	m.config = c
+	return m
 }
 
 // Entry
@@ -96,18 +102,19 @@ func (m *ModelCreate) Generate(c *config.Db, table string) {
 	m.Preview(c, table)
 
 	for _, file := range m.FileList {
-		_, err := os.Stat(file.FilePath)
+		var path = strings.Join([]string{m.config.RootPath, file.FilePath}, string(os.PathSeparator))
+		_, err := os.Stat(path)
 		if err != nil {
 			if os.IsNotExist(err) {
 				// Create new file
-				err = os.MkdirAll(strings.ReplaceAll(file.FilePath, file.FileName, ""), 0755)
+				err = os.MkdirAll(strings.ReplaceAll(path, file.FileName, ""), 0755)
 				if err != nil {
 					panic(err.Error())
 				}
 			}
 		}
 
-		newFile, err := os.Create(file.FilePath)
+		newFile, err := os.Create(path)
 		if err != nil {
 			panic(err.Error())
 		}
@@ -148,7 +155,7 @@ func (m *ModelCreate) createControllerContent() string {
 	// replace
 	packageName := m.TableName
 	modelStruct := m.TableName + "." + m.StructName
-	importModel := "go-sword/gosword/model/" + m.TableName
+	importModel := m.config.ModuleName + "/" + m.config.RootPath + "/model/" + m.TableName
 
 	content := string(data)
 

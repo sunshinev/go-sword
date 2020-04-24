@@ -7,9 +7,9 @@ import (
 
 func main() {
 
-	eng := core.Default()
+	c := core.Default()
 
-	eng.SetConfig(&config.Config{
+	c.SetConfig(&config.Config{
 		Database: &config.Db{
 			Host:     "localhost",
 			User:     "root",
@@ -17,7 +17,9 @@ func main() {
 			Port:     3306,
 			Database: "goadmin",
 		},
+		ModuleName: "go-sword",
+		RootPath:   "go-sword-app",
 	})
 
-	eng.Run()
+	c.Run()
 }

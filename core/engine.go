@@ -110,6 +110,7 @@ func (e *Engine) Preview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m := model.ModelCreate{}
+	m.Init(e.Config)
 	m.Preview(e.Config.Database, data["table_name"])
 
 	ret, err := json.Marshal(&m.FileList)
@@ -134,6 +135,7 @@ func (e *Engine) Generate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m := model.ModelCreate{}
+	m.Init(e.Config)
 	m.Generate(e.Config.Database, data["table_name"])
 
 	ret, err := json.Marshal(&m.FileList)
