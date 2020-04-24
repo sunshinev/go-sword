@@ -52,7 +52,16 @@
                     })
             },
             generate:function() {
-
+                let that = this
+                this.axios
+                    .post('/sword/api/model/generate',{table_name:this.table_name})
+                    .then(response => {
+                        if (response.data.code == 200) {
+                            console.info(response.data)
+                        }else {
+                            alert(response.data.msg)
+                        }
+                    })
             }
         },
         mounted: function() {

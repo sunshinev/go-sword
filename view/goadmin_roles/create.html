@@ -1,7 +1,7 @@
 <template>
     <div class="layout">
         <i-breadcrumb :style="{margin: '24px 24px'}">
-            <i-breadcrumb-item><<table_name>></i-breadcrumb-item>
+            <i-breadcrumb-item>goadmin_roles</i-breadcrumb-item>
             <i-breadcrumb-item>list</i-breadcrumb-item>
         </i-breadcrumb>
         <i-content :style="{padding: '24px', minHeight: '280px', background: '#fff'}">
@@ -98,12 +98,22 @@
                 batchDeleteModalData:[],
                 col_list: [
                     {type:'selection',width:60,align:'center'},
-                    <<js_data_column_list>>
+                    {title:'%!s(int=0)', key:'%!s(int=0)'},
+{title:'%!s(int=1)', key:'%!s(int=1)'},
+{title:'%!s(int=2)', key:'%!s(int=2)'},
+{title:'%!s(int=3)', key:'%!s(int=3)'},
+{title:'%!s(int=4)', key:'%!s(int=4)'},
+
                     {title:'operate', slot:'detail_button', width: 250}
                 ],
                 routePage:this.page ?this.page : '',
                 search_fields: [
-                     <<js_data_search_fields>>
+                     '%!s(int=0)',
+'%!s(int=1)',
+'%!s(int=2)',
+'%!s(int=3)',
+'%!s(int=4)',
+
                 ]
             }
         },
@@ -137,13 +147,13 @@
             },
             invokeDetail: function(row) {
                 // console.info(this.$route)
-                this.$router.push({path:'/<<table_name>>/detail',query:{id:row.id}})
+                this.$router.push({path:'/goadmin_roles/detail',query:{id:row.id}})
             },
             invokeEdit: function(row) {
-                this.$router.push({path:'/<<table_name>>/edit',query:{id:row.id}})
+                this.$router.push({path:'/goadmin_roles/edit',query:{id:row.id}})
             },
             invokeCreate: function() {
-                this.$router.push({path:'/<<table_name>>/create'})
+                this.$router.push({path:'/goadmin_roles/create'})
             },
             invokeDelete: function(row) {
                 // modal

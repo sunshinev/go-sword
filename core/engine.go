@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"go-sword/config"
 	"go-sword/controller/render"
+	"go-sword/model"
 	"go-sword/response"
 	"io/ioutil"
 	"log"
@@ -41,9 +42,9 @@ func (e *Engine) Run() {
 	}()
 
 	//http.HandleFunc("/sword/api/model/create", e.modelCreate)
-	http.HandleFunc("/sword/api/crud/create", e.crudCreate)
 	http.HandleFunc("/sword/api/model/table_list", e.tableList)
-	http.HandleFunc("/sword/api/model/preview", e.modelPreview)
+	http.HandleFunc("/sword/api/model/preview", e.Preview)
+	http.HandleFunc("/sword/api/model/generate", e.Generate)
 
 	// home page
 	http.Handle("/sword/", http.StripPrefix("/sword/", http.FileServer(http.Dir("resource/web/base/dist"))))
@@ -107,4 +108,35 @@ func (e *Engine) Preview(w http.ResponseWriter, r *http.Request) {
 	if data["table_name"] == "" {
 		panic("tableName is empty")
 	}
+
+	m := model.ModelCreate{}
+	m.Preview(e.Config.Database, data["table_name"])
+
+	ret, err := json.Marshal(&m.FileList)
+
+	w.Write(ret)
+}
+
+func (e *Engine) Generate(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	var data map[string]string
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	if data["table_name"] == "" {
+		panic("tableName is empty")
+	}
+
+	m := model.ModelCreate{}
+	m.Generate(e.Config.Database, data["table_name"])
+
+	ret, err := json.Marshal(&m.FileList)
+
+	w.Write(ret)
 }

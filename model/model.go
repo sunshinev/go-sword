@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"go-sword/config"
 	"io/ioutil"
 	"os"
@@ -23,11 +24,11 @@ type ModelCreate struct {
 type FileInstance struct {
 	FileName    string
 	FilePath    string
-	FileContent []byte
+	FileContent string
 }
 
 // Entry
-func (m *ModelCreate) ParseTable(c *config.Db, table string) {
+func (m *ModelCreate) parseTable(c *config.Db, table string) {
 
 	// Use db2struct (https://github.com/Shelnutt2/db2struct)
 	columnDataTypes, err := db2struct.GetColumnsFromMysqlTable(c.User, c.Password, c.Host, c.Port, c.Database, table)
@@ -59,7 +60,9 @@ func (m *ModelCreate) ParseTable(c *config.Db, table string) {
 	m.Struc = struc
 }
 
-func (m *ModelCreate) Preview() {
+func (m *ModelCreate) Preview(c *config.Db, table string) {
+
+	m.parseTable(c, table)
 	// Model
 	var modelFile = &FileInstance{
 		FilePath:    strings.Join([]string{"model", m.TableName, "model.go"}, string(os.PathSeparator)),
@@ -89,22 +92,48 @@ func (m *ModelCreate) Preview() {
 	m.FileList = append(m.FileList, listHtmlFile)
 }
 
+func (m *ModelCreate) Generate(c *config.Db, table string) {
+	m.Preview(c, table)
+
+	for _, file := range m.FileList {
+		_, err := os.Stat(file.FilePath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				// Create new file
+				err = os.MkdirAll(strings.ReplaceAll(file.FilePath, file.FileName, ""), 0755)
+				if err != nil {
+					panic(err.Error())
+				}
+			}
+		}
+
+		newFile, err := os.Create(file.FilePath)
+		if err != nil {
+			panic(err.Error())
+		}
+		_, err = newFile.Write([]byte(file.FileContent))
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+}
+
 // Create model file content
-func (m *ModelCreate) createModelContent() []byte {
+func (m *ModelCreate) createModelContent() string {
 	// Modify m.Struc & add import
 	if strings.Contains(string(m.Struc), "time.Time") {
 		str := "package " + m.PackageName
 		newStr := str + `
 import "time"
 `
-		return []byte(strings.Replace(string(m.Struc), str, newStr, 1))
+		return strings.Replace(string(m.Struc), str, newStr, 1)
 	}
 
-	return m.Struc
+	return string(m.Struc)
 }
 
 // Create model file content
-func (m *ModelCreate) createControllerContent() []byte {
+func (m *ModelCreate) createControllerContent() string {
 	// Read stub
 	file, err := os.Open("stub/controller/controller.stub")
 	if err != nil {
@@ -127,13 +156,13 @@ func (m *ModelCreate) createControllerContent() []byte {
 	content = strings.ReplaceAll(content, "<<model_struct>>", modelStruct)
 	content = strings.ReplaceAll(content, "<<import_model>>", importModel)
 
-	return []byte(content)
+	return content
 }
 
 // Create model file content
-func (m *ModelCreate) createListHtml() []byte {
+func (m *ModelCreate) createListHtml() string {
 	// Read stub
-	file, err := os.Open("stub/controller/controller.stub")
+	file, err := os.Open("stub/html/list.stub")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -144,15 +173,19 @@ func (m *ModelCreate) createListHtml() []byte {
 	}
 
 	// replace
-	packageName := m.TableName
-	modelStruct := m.TableName + "." + m.StructName
-	importModel := "go-sword/gosword/model/" + m.TableName
+	var columnList = ""
+	var searchFields = ""
+
+	for name := range m.Columns {
+		columnList = columnList + fmt.Sprintf("{title:'%s', key:'%s'},\n", name, name)
+		searchFields = searchFields + fmt.Sprintf("'%s',\n", name)
+	}
 
 	content := string(data)
 
-	content = strings.ReplaceAll(content, "<<package_name>>", packageName)
-	content = strings.ReplaceAll(content, "<<model_struct>>", modelStruct)
-	content = strings.ReplaceAll(content, "<<import_model>>", importModel)
+	content = strings.ReplaceAll(content, "<<table_name>>", m.TableName)
+	content = strings.ReplaceAll(content, "<<js_data_column_list>>", columnList)
+	content = strings.ReplaceAll(content, "<<js_data_search_fields>>", searchFields)
 
-	return []byte(content)
+	return content
 }
