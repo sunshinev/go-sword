@@ -2,7 +2,7 @@
 // If you want to recreated the route,you should delete the file,and then use Sword generate again, or you can copy from the `stub/route/route.stub` file
 
 
- // Do not modify the notes `----Route-begin----` or `----Route-end----` or `----Import----`
+// Do not modify the notes `----Route-begin----` or `----Route-end----` or `----Import----`
 
 package route
 

@@ -120,7 +120,7 @@
                 }
 
                 this.axios
-                    .post('/api/admin/users/list'+pageStr,JSON.stringify(search_list))
+                    .post('/api/<<table_name>>/list'+pageStr,JSON.stringify(search_list))
                     .then(response=>{
                         console.info(response)
                         this.main_data = response.data.data.list,
@@ -153,7 +153,7 @@
             },
             invokeConfirmDelete: function() {
                 this.axios
-                    .post('/api/admin/users/delete',{id:this.deleteModalData.id})
+                    .post('/api/<<table_name>>/delete',{id:this.deleteModalData.id})
                     .then(response=>{
                         this.deleteModal = false
                         this.deleteModalData = {}
@@ -173,7 +173,7 @@
             },
             invokeConfirmBatchDelete: function() {
                 this.axios
-                    .post('/api/admin/users/batch_delete',JSON.stringify({'ids':this.batchDeleteModalData}))
+                    .post('/api/<<table_name>>/batch_delete',JSON.stringify({'ids':this.batchDeleteModalData}))
                     .then(response=>{
                         this.batchDeleteModal = false
                         this.batchDeleteModalData = {}

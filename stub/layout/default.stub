@@ -15,7 +15,7 @@
     <div>
         <i-layout>
             <i-header :style="{background:'#000'}">
-                <i-menu mode="horizontal" theme="dark" active-name="1" :style="{background:'#000'}">
+                <i-menu mode="horizontal" theme="dark" active-name="1" :style="{background:'#000'}" >
                     <h2 class="layout-logo" style="color:white;">Title</h2>
                     <div class="layout-nav">
                     </div>
@@ -23,13 +23,13 @@
             </i-header>
             <i-layout>
                 <i-sider hide-trigger :style="{ height: '100vh',background:'#fff'}">
-                    <i-menu theme="light" width="auto">
-                        <template v-for="item in menu">
+                    <i-menu theme="light" width="auto" :active-name="getActiveName" :open-names="['1']">
+                        <template v-for="item in menu" >
                             <i-menu-item v-if="typeof(item.sub_menu) == 'undefined'" :name="item.name">
                                 <i-icon :type="item.icon"></i-icon>
                                 <router-link :to="getRoutePath(item.name)" tag="span">{{item.title}}</router-link>
                             </i-menu-item>
-                            <i-submenu v-if="typeof(item.sub_menu) != 'undefined'">
+                            <i-submenu v-if="typeof(item.sub_menu) != 'undefined'" name="1">
                                 <template slot="title">
                                     <i-icon :type="item.icon"></i-icon>{{item.title}}
                                 </template>
@@ -48,45 +48,40 @@
     </div>
 </template>
 <script>
+
     module.exports = {
         data: function () {
             return {
                 // config global menu list
-                menu: [{
+                menu:[{
                     icon: 'ios-people',
-                    title: 'user_list',
-                    name: 'user_list'
-                },{
-                    icon: 'ios-people',
-                    title: 'CRUD',
-                    name: 'crud'
+                    title: 'Menu',
+                    sub_menu:[
+                        // ----Menus-Add-----
+                        // Do not modify the notes '----Menus-Add-----'
+                    ]
                 }],
+
                 // config global routes
                 routes: [{
                     path: '*',
-                    redirect: {name: 'model'}
-                }, {
-                    name: 'user_list',
-                    path: '/user/list',
-                    url: '/admin/render?path=/user/list'
-                }, {
-                    name: 'user_edit',
-                    path: '/user/edit',
-                    url: '/admin/render?path=/user/edit'
-                },{
-                    name: 'user_create',
-                    path: '/user/create',
-                    url: '/admin/render?path=/user/create'
-                }
+                    redirect: {name: '<<default_route>>'}
+                },
+                // ----Routes-Add-----
+                // Do not modify the notes '----Routes-Add-----'
                 ]
             }
         },
-        computed: {},
+        computed: {
+            getActiveName: function() {
+                    return this.$route.name
+                }
+        },
         methods: {
-            getRoutePath: function (name) {
+            getRoutePath: function(name) {
                 var routes = this.routes
                 for (var i in routes) {
-                    if (name == routes[i].name) {
+                    if(name == routes[i].name) {
                         return routes[i].path
                     }
                 }

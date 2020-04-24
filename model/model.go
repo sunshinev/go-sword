@@ -90,8 +90,8 @@ func (m *ModelCreate) Preview(c *config.Db, table string) {
 	// Html
 	// create.html
 	var listHtmlFile = &FileInstance{
-		FilePath:    strings.Join([]string{"view", m.TableName, "create.html"}, string(os.PathSeparator)),
-		FileName:    "create.html",
+		FilePath:    strings.Join([]string{"view", m.TableName, "list.html"}, string(os.PathSeparator)),
+		FileName:    "list.html",
 		FileContent: m.createListHtml(),
 	}
 
@@ -126,6 +126,15 @@ func (m *ModelCreate) Generate(c *config.Db, table string) {
 
 	// Handle route additional
 	m.generateRoute()
+
+	// Handle main.go additional
+	m.generateMain()
+
+	// Handle core.go additional
+	m.generateCore()
+
+	// Handle default.html additional
+	m.generateDefaultHtml()
 }
 
 func (m *ModelCreate) generateRoute() {
@@ -165,6 +174,92 @@ func (m *ModelCreate) generateRoute() {
 	_, err = newFile.Write([]byte(m.createRouteContent(path)))
 	if err != nil {
 		panic(err.Error())
+	}
+}
+
+func (m *ModelCreate) generateDefaultHtml() {
+	var path = strings.Join([]string{m.config.RootPath, "view", "layout", "default.html"}, string(os.PathSeparator))
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Create new file
+			err = os.MkdirAll(strings.ReplaceAll(path, "default.html", ""), 0755)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			// Create new route.go
+			newFile, err := os.Create(path)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			stubPath := strings.Join([]string{"stub", "layout", "default.stub"}, string(os.PathSeparator))
+			_, err = newFile.Write([]byte(m.createDefaultHtml(stubPath)))
+			if err != nil {
+				panic(err.Error())
+			}
+
+			return
+		}
+
+		panic(err.Error())
+	}
+
+	newFile, err := os.OpenFile(path, os.O_WRONLY, 0755)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	_, err = newFile.Write([]byte(m.createDefaultHtml(path)))
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func (m *ModelCreate) generateMain() {
+	var path = strings.Join([]string{m.config.RootPath, "main.go"}, string(os.PathSeparator))
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Create new file
+			err = os.MkdirAll(strings.ReplaceAll(path, "main.go", ""), 0755)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			newFile, err := os.Create(path)
+			if err != nil {
+				panic(err.Error())
+			}
+			_, err = newFile.Write([]byte(m.createMainContent()))
+			if err != nil {
+				panic(err.Error())
+			}
+		}
+	}
+}
+
+func (m *ModelCreate) generateCore() {
+	var path = strings.Join([]string{m.config.RootPath, "core", "core.go"}, string(os.PathSeparator))
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Create new file
+			err = os.MkdirAll(strings.ReplaceAll(path, "core.go", ""), 0755)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			newFile, err := os.Create(path)
+			if err != nil {
+				panic(err.Error())
+			}
+			_, err = newFile.Write([]byte(m.createCoreContent()))
+			if err != nil {
+				panic(err.Error())
+			}
+		}
 	}
 }
 
@@ -226,7 +321,7 @@ func (m *ModelCreate) createListHtml() string {
 	var columnList = ""
 	var searchFields = ""
 
-	for name := range m.Columns {
+	for _, name := range m.Columns {
 		columnList = columnList + fmt.Sprintf("{title:'%s', key:'%s'},\n", name, name)
 		searchFields = searchFields + fmt.Sprintf("'%s',\n", name)
 	}
@@ -274,6 +369,84 @@ func (m *ModelCreate) createRouteContent(filePath string) string {
 		content = strings.ReplaceAll(content, "// ----Import----", importStr+`
 	// ----Import----`)
 	}
+
+	return content
+}
+
+func (m *ModelCreate) createMainContent() string {
+	// Read stub
+	file, err := os.Open("stub/main.stub")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	str := strings.Join([]string{m.config.ModuleName, m.config.RootPath, "core"}, "/")
+
+	content := string(data)
+
+	content = strings.ReplaceAll(content, "<<import_core>>", str)
+	return content
+}
+
+func (m *ModelCreate) createCoreContent() string {
+	// Read stub
+	file, err := os.Open("stub/core/core.stub")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	str := strings.Join([]string{m.config.ModuleName, m.config.RootPath, "route"}, "/")
+
+	content := string(data)
+
+	content = strings.ReplaceAll(content, "<<import_route>>", str)
+	return content
+}
+
+func (m *ModelCreate) createDefaultHtml(filePath string) string {
+	// Read stub
+	file, err := os.Open(filePath)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// replace
+	var menu = fmt.Sprintf(`{icon: 'ios-people',title: '%s_list',name:'%s_list'},`, m.TableName, m.TableName)
+	var route = fmt.Sprintf(`{
+                    name: '%s_list',
+                    path: '/%s/list',
+                    url: '/render?path=/%s/list'
+                },`, m.TableName, m.TableName, m.TableName)
+
+	var defaultRoute = m.TableName + "_list"
+
+	// Check if content repeated,if true then ignore replace
+	content := string(data)
+	if !strings.Contains(content, menu) {
+		content = strings.ReplaceAll(content, "// ----Menus-Add-----", menu+`
+	                    // ----Menus-Add-----`)
+	}
+	if !strings.Contains(content, route) {
+		content = strings.ReplaceAll(content, "// ----Routes-Add-----", route+`
+                // ----Routes-Add-----`)
+	}
+
+	content = strings.ReplaceAll(content, "<<default_route>>", defaultRoute)
 
 	return content
 }

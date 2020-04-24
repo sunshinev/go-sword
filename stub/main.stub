@@ -1,0 +1,16 @@
+package main
+
+import (
+	"<<import_core>>"
+	"log"
+)
+
+func main() {
+
+	e := core.Engine{}
+
+	err := e.Run()
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+}
