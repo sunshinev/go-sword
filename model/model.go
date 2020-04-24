@@ -123,6 +123,49 @@ func (m *ModelCreate) Generate(c *config.Db, table string) {
 			panic(err.Error())
 		}
 	}
+
+	// Handle route additional
+	m.generateRoute()
+}
+
+func (m *ModelCreate) generateRoute() {
+	var path = strings.Join([]string{m.config.RootPath, "route", "route.go"}, string(os.PathSeparator))
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Create new file
+			err = os.MkdirAll(strings.ReplaceAll(path, "route.go", ""), 0755)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			// Create new route.go
+			newFile, err := os.Create(path)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			routeStubPath := strings.Join([]string{"stub", "route", "route.stub"}, string(os.PathSeparator))
+			_, err = newFile.Write([]byte(m.createRouteContent(routeStubPath)))
+			if err != nil {
+				panic(err.Error())
+			}
+
+			return
+		}
+
+		panic(err.Error())
+	}
+
+	newFile, err := os.OpenFile(path, os.O_WRONLY, 0755)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	_, err = newFile.Write([]byte(m.createRouteContent(path)))
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 // Create model file content
@@ -193,6 +236,44 @@ func (m *ModelCreate) createListHtml() string {
 	content = strings.ReplaceAll(content, "<<table_name>>", m.TableName)
 	content = strings.ReplaceAll(content, "<<js_data_column_list>>", columnList)
 	content = strings.ReplaceAll(content, "<<js_data_search_fields>>", searchFields)
+
+	return content
+}
+
+func (m *ModelCreate) createRouteContent(filePath string) string {
+	// Read stub
+	file, err := os.Open(filePath)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// replace
+	var str = `
+	// Route tag %s
+	http.HandleFunc("/api/%s/list", %s.List(db))
+	http.HandleFunc("/api/%s/delete", %s.Delete(db))
+	http.HandleFunc("/api/%s/detail", %s.Detail(db))`
+
+	str = strings.ReplaceAll(str, "%s", m.TableName)
+
+	var importStr = `"%s/%s/controller/%s"`
+	importStr = fmt.Sprintf(importStr, m.config.ModuleName, m.config.RootPath, m.TableName)
+
+	// Check if content repeated,if true then ignore replace
+	content := string(data)
+	if !strings.Contains(content, str) {
+		content = strings.ReplaceAll(content, "// ----Route-end----", str+`
+	// ----Route-end----`)
+	}
+	if !strings.Contains(content, importStr) {
+		content = strings.ReplaceAll(content, "// ----Import----", importStr+`
+	// ----Import----`)
+	}
 
 	return content
 }

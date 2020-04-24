@@ -1,0 +1,31 @@
+// Sword will check if route file is created, if existed, Sword will modify it
+// If you want to recreated the route,you should delete the file,and then use Sword generate again, or you can copy from the `stub/route/route.stub` file
+
+
+ // Do not modify the notes `----Route-begin----` or `----Route-end----` or `----Import----`
+
+package route
+
+import (
+	"go-sword/controller/render"
+	"net/http"
+
+	"github.com/jinzhu/gorm"
+	// ----Import----
+)
+
+func Register(db *gorm.DB) {
+	// Static file
+	http.Handle("/go_sword_public/", http.StripPrefix("/go_sword_public/", http.FileServer(http.Dir("resource/web/base/dist"))))
+
+	// Default index.html
+	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("resource/web/base/dist"))))
+
+	// Render Vue html component
+	http.HandleFunc("/render", render.Render)
+
+
+    // ----Route-begin----
+
+	// ----Route-end----
+}

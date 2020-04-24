@@ -10,13 +10,11 @@ import (
 
 func Register(db *gorm.DB) {
 	// 静态路由
-	http.Handle("/go_sword_public/", http.StripPrefix("/public/", http.FileServer(http.Dir("resource/web/base/dist"))))
+	http.Handle("/go_sword_public/", http.StripPrefix("/go_sword_public/", http.FileServer(http.Dir("resource/web/base/dist"))))
+	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("resource/web/base/dist"))))
+	http.HandleFunc("/render", render.Render)
 
-	http.HandleFunc("/admin/render", render.Render)
-	http.Handle("/admin/", http.StripPrefix("/admin/", http.FileServer(http.Dir("resource/web/base/dist"))))
-
-	http.HandleFunc("/api/admin/users/list", user.List(db))
-	http.HandleFunc("/api/admin/users/delete", user.Delete(db))
-	http.HandleFunc("/api/admin/users/detail", user.Detail(db))
-	//http.HandleFunc("/api/admin/users/batch_delete", user.List(db))
+	http.HandleFunc("/api/user/list", user.List(db))
+	http.HandleFunc("/api/user/delete", user.Delete(db))
+	http.HandleFunc("/api/user/detail", user.Detail(db))
 }
