@@ -2,17 +2,13 @@
     <i-row>
         <i-col span="12">
             <i-form :label-width="200" method="post">
-                <i-form-item label="Model name">
-                    <i-input name="model_class_name" value="" :autocomplete="true"
-                             placeholder="ex: App\Models\User\Mongo\Userinfo"></i-input>
-                </i-form-item>
-                <i-form-item label="Parent class name">
-                    <i-input name="parent_class_name" value="" :autocomplete="true"
-                             placeholder="ex: Illuminate\Database\Eloquent\Model"></i-input>
+                <i-form-item label="MySQL table">
+                    <i-auto-complete :data="table_list" v-model="table_name"
+                                     placeholder="Click to choose MySQL table"></i-auto-complete>
                 </i-form-item>
                 <i-form-item>
-                    <i-button type="primary" html-type="submit" name="preview">Preview</i-button>
-                    <i-button type="success" html-type="submit" name="generate" :value="1">Generate</i-button>
+                    <i-button type="primary" @click="preview">Preview</i-button>
+                    <i-button type="success" @click="generate">Generate</i-button>
                 </i-form-item>
             </i-form>
             <i-alert type="" show-icon>
@@ -23,11 +19,44 @@
 </template>
 <script type="text/javascript">
     module.exports = {
-        data: function () {
+        data: function() {
             return {
-                table_list: []
+                table_list: [],
+                table_name:''
             }
         },
-        met
+        methods: {
+            getTableList: function() {
+                let that = this
+
+                this.axios
+                    .post('/sword/api/model/table_list')
+                    .then(response => {
+                        if (response.data.code == 200) {
+                            that.table_list = response.data.data.list
+                        }else {
+                            alert(response.data.msg)
+                        }
+                    })
+            },
+            preview:function() {
+                let that = this
+                this.axios
+                    .post('/sword/api/model/preview',{table_name:this.table_name})
+                    .then(response => {
+                        if (response.data.code == 200) {
+                            console.info(response.data)
+                        }else {
+                            alert(response.data.msg)
+                        }
+                    })
+            },
+            generate:function() {
+
+            }
+        },
+        mounted: function() {
+            this.getTableList()
+        }
     }
 </script>

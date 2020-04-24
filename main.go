@@ -2,12 +2,12 @@ package main
 
 import (
 	"go-sword/config"
-	"go-sword/engine"
+	"go-sword/core"
 )
 
 func main() {
 
-	eng := engine.Default()
+	eng := core.Default()
 
 	eng.SetConfig(&config.Config{
 		Database: &config.Db{

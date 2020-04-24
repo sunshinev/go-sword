@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+
+
+message TableList {
+    repeated string table_name = 1;
+}

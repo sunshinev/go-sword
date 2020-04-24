@@ -1,12 +1,12 @@
-package engine
+package core
 
 import (
 	"database/sql"
 	"encoding/json"
 	"go-sword/config"
 	"go-sword/controller/render"
-	"go-sword/model"
 	"go-sword/response"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -40,9 +40,10 @@ func (e *Engine) Run() {
 		}
 	}()
 
-	http.HandleFunc("/sword/api/model/create", e.modelCreate)
+	//http.HandleFunc("/sword/api/model/create", e.modelCreate)
 	http.HandleFunc("/sword/api/crud/create", e.crudCreate)
 	http.HandleFunc("/sword/api/model/table_list", e.tableList)
+	http.HandleFunc("/sword/api/model/preview", e.modelPreview)
 
 	// home page
 	http.Handle("/sword/", http.StripPrefix("/sword/", http.FileServer(http.Dir("resource/web/base/dist"))))
@@ -85,23 +86,25 @@ func (e *Engine) tableList(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 
-	w.Write(jsonData)
+	_, err = w.Write(jsonData)
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
-func (e *Engine) modelCreate(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+func (e *Engine) Preview(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	tableName := r.FormValue("table_name")
-	if tableName == "" {
-		panic("tableName is empty")
+	var data map[string]string
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		panic(err.Error())
 	}
 
-	model.Create(e.Config.Database, tableName)
-}
-
-func (e *Engine) crudCreate(w http.ResponseWriter, r *http.Request) {
-
+	if data["table_name"] == "" {
+		panic("tableName is empty")
+	}
 }
