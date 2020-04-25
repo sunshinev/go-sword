@@ -1,8 +1,8 @@
 package main
 
 import (
-	"go-sword/config"
-	"go-sword/core"
+	"github.com/sunshinev/go-sword/config"
+	"github.com/sunshinev/go-sword/core"
 )
 
 func main() {
