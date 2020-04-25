@@ -30,6 +30,9 @@ type FileInstance struct {
 	FileName    string
 	FilePath    string
 	FileContent string
+	Diff        string
+	IsDiff      bool
+	IsNew       bool
 }
 
 func (g *Generator) Init(c *config.Config) *Generator {
@@ -73,17 +76,10 @@ func (g *Generator) Preview(c *config.DbSet, table string) {
 
 	g.parseTable(c, table)
 	// Model
-	var modelFile = &FileInstance{
-		FilePath:    strings.Join([]string{"model", g.TableName + ".go"}, string(os.PathSeparator)),
-		FileName:    g.TableName + ".go",
-		FileContent: g.createModelContent(),
-	}
-
-	g.FileList = append(g.FileList, modelFile)
-
+	g.gModelFile()
 	// Controller
 	var controllerFile = &FileInstance{
-		FilePath:    strings.Join([]string{"controller", g.TableName, g.TableName + ".go"}, string(os.PathSeparator)),
+		FilePath:    filepath.Join(g.config.RootPath, "controller", g.TableName, g.TableName+".go"),
 		FileName:    g.TableName + ".go",
 		FileContent: g.createControllerContent(),
 	}
@@ -93,12 +89,24 @@ func (g *Generator) Preview(c *config.DbSet, table string) {
 	// Html
 	// list.html
 	var listHtmlFile = &FileInstance{
-		FilePath:    strings.Join([]string{"view", g.TableName, "list.html"}, string(os.PathSeparator)),
+		FilePath:    filepath.Join(g.config.RootPath, "view", g.TableName, "list.html"),
 		FileName:    "list.html",
 		FileContent: g.createListHtml(),
 	}
 
 	g.FileList = append(g.FileList, listHtmlFile)
+
+	// Route.go
+	var routeFile = &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "route", "route.go"),
+		FileName:    "route.go",
+		FileContent: g.createListHtml(),
+	}
+
+	g.FileList = append(g.FileList, routeFile)
+	// Main.go
+	// Core.go
+	// default.html
 }
 
 func (g *Generator) Generate(c *config.DbSet, table string) {
@@ -264,20 +272,6 @@ func (g *Generator) generateCore() {
 			}
 		}
 	}
-}
-
-// Create model file content
-func (g *Generator) createModelContent() string {
-	// Modify g.Struc & add import
-	if strings.Contains(string(g.Struc), "time.Time") {
-		str := "package " + g.PackageName
-		newStr := "package model" + `
-import "time"
-`
-		return strings.Replace(string(g.Struc), str, newStr, 1)
-	}
-
-	return string(g.Struc)
 }
 
 // Create model file content
@@ -449,4 +443,41 @@ func (g *Generator) createDefaultHtml(filePath string) string {
 	content = strings.ReplaceAll(content, "<<default_route>>", defaultRoute)
 
 	return content
+}
+
+func (g *Generator) gModelFile() {
+	file := &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "model", g.TableName+".go"),
+		FileName:    g.TableName + ".go",
+		FileContent: g.createModelContent(),
+	}
+
+	g.FileList = append(g.FileList, file)
+}
+
+// Create model file content
+func (g *Generator) createModelContent() string {
+	// Modify g.Struc & add import
+	if strings.Contains(string(g.Struc), "time.Time") {
+		str := "package " + g.PackageName
+		newStr := "package model" + `
+import "time"
+`
+		return strings.Replace(string(g.Struc), str, newStr, 1)
+	}
+
+	return string(g.Struc)
+}
+
+func (g *Generator) readCreatedFile(path) string {
+	// Modify g.Struc & add import
+	if strings.Contains(string(g.Struc), "time.Time") {
+		str := "package " + g.PackageName
+		newStr := "package model" + `
+import "time"
+`
+		return strings.Replace(string(g.Struc), str, newStr, 1)
+	}
+
+	return string(g.Struc)
 }
