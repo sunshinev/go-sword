@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/sunshinev/go-sword/assets/stub"
@@ -89,6 +90,15 @@ func (g *Generator) Preview(c *config.DbSet, table string) {
 
 	g.FileList = append(g.FileList, controllerFile)
 
+	// Render
+	var renderFile = &FileInstance{
+		FilePath:    filepath.Join("render", "render.go"),
+		FileName:    "render.go",
+		FileContent: g.createRenderContent(),
+	}
+
+	g.FileList = append(g.FileList, renderFile)
+
 	// Html
 	// list.html
 	var listHtmlFile = &FileInstance{
@@ -140,7 +150,8 @@ func (g *Generator) Generate(c *config.DbSet, table string) {
 }
 
 func (g *Generator) generateRoute() {
-	var path = strings.Join([]string{g.config.RootPath, "route", "route.go"}, string(os.PathSeparator))
+	var path = filepath.Join(g.config.RootPath, "route", "route.go")
+
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -156,8 +167,7 @@ func (g *Generator) generateRoute() {
 				panic(err.Error())
 			}
 
-			routeStubPath := strings.Join([]string{"stub", "route", "route.stub"}, string(os.PathSeparator))
-			_, err = newFile.Write([]byte(g.createRouteContent(routeStubPath)))
+			_, err = newFile.Write([]byte(g.createRouteContent("")))
 			if err != nil {
 				panic(err.Error())
 			}
@@ -327,16 +337,28 @@ func (g *Generator) createListHtml() string {
 	return content
 }
 
-func (g *Generator) createRouteContent(filePath string) string {
-	// Read stub
-	file, err := os.Open(filePath)
-	if err != nil {
-		panic(err.Error())
-	}
+func (g *Generator) createRouteContent(routePath string) string {
 
-	data, err := ioutil.ReadAll(file)
-	if err != nil {
-		panic(err.Error())
+	var data = []byte{}
+	var err error
+
+	// Read bytes from stub
+	if routePath == "" {
+		data, err = stub.Asset("stub/route/route.stub")
+		if err != nil {
+			panic(err.Error())
+		}
+	} else {
+		// Open created route.go from rootPath
+		file, err := os.Open(routePath)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		data, err = ioutil.ReadAll(file)
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 
 	// replace
@@ -436,4 +458,14 @@ func (g *Generator) createDefaultHtml(filePath string) string {
 	content = strings.ReplaceAll(content, "<<default_route>>", defaultRoute)
 
 	return content
+}
+
+func (g *Generator) createRenderContent() string {
+	// Read stub
+	data, err := stub.Asset("stub/render/render.stub")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return string(data)
 }

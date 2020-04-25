@@ -13,7 +13,6 @@ import (
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 
 	"github.com/sunshinev/go-sword/config"
-	"github.com/sunshinev/go-sword/controller/render"
 	"github.com/sunshinev/go-sword/response"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -60,7 +59,7 @@ func (s *Sword) Run() {
 	http.Handle("/", http.FileServer(&fs))
 
 	// Render vue component
-	http.HandleFunc("/render", render.Render)
+	http.HandleFunc("/render", s.Render)
 
 	// Start server
 	err = http.ListenAndServe(":"+s.Config.ServerPort, nil)
@@ -170,4 +169,44 @@ func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 
+}
+
+func (s *Sword) Render(writer http.ResponseWriter, request *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("panic %v", err)
+		}
+	}()
+	// 解析参数，映射到文件
+	err := request.ParseForm()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	path := request.FormValue("path")
+
+	//log.Println("%v", path)
+	if path == "" {
+		panic("lose path param")
+	}
+
+	// 从view目录中寻找文件
+	body := s.readFile("view" + path + ".html")
+
+	// body, err := view.Asset("view" + path + ".html")
+
+	_, err = writer.Write(body)
+
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func (s *Sword) readFile(path string) []byte {
+	body, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return body
 }
