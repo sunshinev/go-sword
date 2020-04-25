@@ -1,14 +1,16 @@
 package config
 
 type Config struct {
-	Database *Db
+	Database *DbSet
 	// The directory go-sword store new file
 	RootPath string
 	// Project go mod module name
 	ModuleName string
+	// Go-sword server port
+	ServerPort string
 }
 
-type Db struct {
+type DbSet struct {
 	Host     string
 	User     string
 	Password string

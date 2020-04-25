@@ -35,7 +35,7 @@ func (m *ModelCreate) Init(c *config.Config) *ModelCreate {
 }
 
 // Entry
-func (m *ModelCreate) parseTable(c *config.Db, table string) {
+func (m *ModelCreate) parseTable(c *config.DbSet, table string) {
 
 	// Use db2struct (https://github.com/Shelnutt2/db2struct)
 	columnDataTypes, err := db2struct.GetColumnsFromMysqlTable(c.User, c.Password, c.Host, c.Port, c.Database, table)
@@ -67,7 +67,7 @@ func (m *ModelCreate) parseTable(c *config.Db, table string) {
 	m.Struc = struc
 }
 
-func (m *ModelCreate) Preview(c *config.Db, table string) {
+func (m *ModelCreate) Preview(c *config.DbSet, table string) {
 
 	m.parseTable(c, table)
 	// Model
@@ -99,7 +99,7 @@ func (m *ModelCreate) Preview(c *config.Db, table string) {
 	m.FileList = append(m.FileList, listHtmlFile)
 }
 
-func (m *ModelCreate) Generate(c *config.Db, table string) {
+func (m *ModelCreate) Generate(c *config.DbSet, table string) {
 	m.Preview(c, table)
 
 	for _, file := range m.FileList {

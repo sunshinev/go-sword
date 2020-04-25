@@ -21,23 +21,24 @@ import (
 )
 
 // Engine
-type Engine struct {
+type Sword struct {
 	Config *config.Config
+	Db     *sql.DB
 }
 
-// Create Engine
-func Default() *Engine {
-	return &Engine{
+// Create Sword
+func Default() *Sword {
+	return &Sword{
 		Config: &config.Config{},
 	}
 }
 
 // Set Config like Database
-func (e *Engine) SetConfig(cfg *config.Config) {
-	e.Config = cfg
+func (s *Sword) SetConfig(cfg *config.Config) {
+	s.Config = cfg
 }
 
-func (e *Engine) Run() {
+func (s *Sword) Run() {
 
 	// Cache Panic
 	defer func() {
@@ -46,10 +47,15 @@ func (e *Engine) Run() {
 		}
 	}()
 
+	err := s.connDb()
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+
 	//http.HandleFunc("/sword/api/model/create", e.modelCreate)
-	http.HandleFunc("/api/model/table_list", e.tableList)
-	http.HandleFunc("/api/model/preview", e.Preview)
-	http.HandleFunc("/api/model/generate", e.Generate)
+	http.HandleFunc("/api/model/table_list", s.tableList)
+	http.HandleFunc("/api/model/preview", s.Preview)
+	http.HandleFunc("/api/model/generate", s.Generate)
 
 	// home page
 	fs := assetfs.AssetFS{
@@ -63,22 +69,28 @@ func (e *Engine) Run() {
 	// render vue component
 	http.HandleFunc("/render", render.Render)
 
-	err := http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatalf("服务启动失败 %v", err)
 	}
 }
 
-func (e *Engine) tableList(w http.ResponseWriter, r *http.Request) {
-	// user:password@(localhost)/dbname?charset=utf8&parseTime=True&loc=Local
-	c := e.Config.Database
+func (s *Sword) connDb() (err error) {
+	c := s.Config.Database
 	db, err := sql.Open("mysql", c.User+":"+c.Password+"@tcp("+c.Host+":"+strconv.Itoa(c.Port)+")/"+c.Database+"?&parseTime=True")
 	if err != nil {
-		panic(err.Error())
+		return
 	}
-	defer db.Close()
 
-	rows, err := db.Query("show tables")
+	s.Db = db
+
+	return nil
+}
+
+func (s *Sword) tableList(w http.ResponseWriter, r *http.Request) {
+	// user:password@(localhost)/dbname?charset=utf8&parseTime=True&loc=Local
+
+	rows, err := s.Db.Query("show tables")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -104,7 +116,7 @@ func (e *Engine) tableList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (e *Engine) Preview(w http.ResponseWriter, r *http.Request) {
+func (s *Sword) Preview(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err.Error())
@@ -121,15 +133,15 @@ func (e *Engine) Preview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m := model.ModelCreate{}
-	m.Init(e.Config)
-	m.Preview(e.Config.Database, data["table_name"])
+	m.Init(s.Config)
+	m.Preview(s.Config.Database, data["table_name"])
 
 	ret, err := json.Marshal(&m.FileList)
 
 	w.Write(ret)
 }
 
-func (e *Engine) Generate(w http.ResponseWriter, r *http.Request) {
+func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err.Error())
@@ -146,8 +158,8 @@ func (e *Engine) Generate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m := model.ModelCreate{}
-	m.Init(e.Config)
-	m.Generate(e.Config.Database, data["table_name"])
+	m.Init(s.Config)
+	m.Generate(s.Config.Database, data["table_name"])
 
 	ret, err := json.Marshal(&m.FileList)
 
