@@ -427,11 +427,16 @@ func (m *ModelCreate) createDefaultHtml(filePath string) string {
 
 	// replace
 	var menu = fmt.Sprintf(`{icon: 'ios-people',title: '%s_list',name:'%s_list'},`, m.TableName, m.TableName)
-	var route = fmt.Sprintf(`{
-                    name: '%s_list',
-                    path: '/%s/list',
-                    url: '/render?path=/%s/list'
-                },`, m.TableName, m.TableName, m.TableName)
+	var routeSets = []string{"list", "create", "detail", "edit"}
+	var route = ""
+
+	for _, set := range routeSets {
+		route += strings.ReplaceAll(strings.ReplaceAll(`{
+                    name: 'user_list',
+                    path: '/user/list',
+                    url: '/render?path=/user/list'
+                },`, "user", m.TableName), "list", set)
+	}
 
 	var defaultRoute = m.TableName + "_list"
 

@@ -7,6 +7,15 @@ import (
 
 func main() {
 
+	//f := untils.FileCopy{
+	//	Dir:  make(chan *untils.Params, 100),
+	//	File: make(chan *untils.Params, 100),
+	//}
+	//
+	//err := f.Run("resource/", "go-sword-app/resource/")
+	//
+	//log.Fatalf("%v", err)
+
 	c := core.Default()
 
 	c.SetConfig(&config.Config{
