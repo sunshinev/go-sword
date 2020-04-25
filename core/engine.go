@@ -8,6 +8,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/sunshinev/go-sword/assets/resource"
+
+	assetfs "github.com/elazarl/go-bindata-assetfs"
+
 	"github.com/sunshinev/go-sword/config"
 	"github.com/sunshinev/go-sword/controller/render"
 	"github.com/sunshinev/go-sword/model"
@@ -43,15 +47,21 @@ func (e *Engine) Run() {
 	}()
 
 	//http.HandleFunc("/sword/api/model/create", e.modelCreate)
-	http.HandleFunc("/sword/api/model/table_list", e.tableList)
-	http.HandleFunc("/sword/api/model/preview", e.Preview)
-	http.HandleFunc("/sword/api/model/generate", e.Generate)
+	http.HandleFunc("/api/model/table_list", e.tableList)
+	http.HandleFunc("/api/model/preview", e.Preview)
+	http.HandleFunc("/api/model/generate", e.Generate)
 
 	// home page
-	http.Handle("/sword/", http.StripPrefix("/sword/", http.FileServer(http.Dir("resource/web/base/dist"))))
+	fs := assetfs.AssetFS{
+		Asset:     resource.Asset,
+		AssetDir:  resource.AssetDir,
+		AssetInfo: resource.AssetInfo,
+		Prefix:    "resource/dist",
+	}
+	http.Handle("/", http.FileServer(&fs))
 
 	// render vue component
-	http.HandleFunc("/sword/render", render.Render)
+	http.HandleFunc("/render", render.Render)
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {

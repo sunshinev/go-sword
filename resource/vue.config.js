@@ -9,7 +9,7 @@ module.exports = {
 
 	filenameHashing: false,
 
-	publicPath:"/sword/",
+	publicPath:"/",
 
 	chainWebpack: config => {
 		config.plugins.delete('preload')

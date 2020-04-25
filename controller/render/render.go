@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/sunshinev/go-sword/assets/view"
 )
 
 func Render(writer http.ResponseWriter, request *http.Request) {
@@ -26,7 +28,9 @@ func Render(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// 从view目录中寻找文件
-	body := readFile("view" + path + ".html")
+	//body := readFile("view" + path + ".html")
+
+	body, err := view.Asset("view" + path + ".html")
 
 	_, err = writer.Write(body)
 

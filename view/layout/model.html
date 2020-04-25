@@ -30,7 +30,7 @@
                 let that = this
 
                 this.axios
-                    .post('/sword/api/model/table_list')
+                    .post('/api/model/table_list')
                     .then(response => {
                         if (response.data.code == 200) {
                             that.table_list = response.data.data.list
@@ -42,7 +42,7 @@
             preview:function() {
                 let that = this
                 this.axios
-                    .post('/sword/api/model/preview',{table_name:this.table_name})
+                    .post('/api/model/preview',{table_name:this.table_name})
                     .then(response => {
                         if (response.data.code == 200) {
                             console.info(response.data)
@@ -54,7 +54,7 @@
             generate:function() {
                 let that = this
                 this.axios
-                    .post('/sword/api/model/generate',{table_name:this.table_name})
+                    .post('/api/model/generate',{table_name:this.table_name})
                     .then(response => {
                         if (response.data.code == 200) {
                             console.info(response.data)
