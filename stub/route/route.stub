@@ -7,7 +7,6 @@
 package route
 
 import (
-	"go-sword/controller/render"
 	"net/http"
 
 	"github.com/jinzhu/gorm"

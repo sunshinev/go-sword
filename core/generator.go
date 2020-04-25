@@ -90,15 +90,6 @@ func (g *Generator) Preview(c *config.DbSet, table string) {
 
 	g.FileList = append(g.FileList, controllerFile)
 
-	// Render
-	var renderFile = &FileInstance{
-		FilePath:    filepath.Join("render", "render.go"),
-		FileName:    "render.go",
-		FileContent: g.createRenderContent(),
-	}
-
-	g.FileList = append(g.FileList, renderFile)
-
 	// Html
 	// list.html
 	var listHtmlFile = &FileInstance{
@@ -458,14 +449,4 @@ func (g *Generator) createDefaultHtml(filePath string) string {
 	content = strings.ReplaceAll(content, "<<default_route>>", defaultRoute)
 
 	return content
-}
-
-func (g *Generator) createRenderContent() string {
-	// Read stub
-	data, err := stub.Asset("stub/render/render.stub")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return string(data)
 }

@@ -1,8 +1,10 @@
 package core
 
 import (
-	"<<import_route>>"
+	"io/ioutil"
 	"net/http"
+
+	"<<import_route>>"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
@@ -20,7 +22,7 @@ func (e *Engine) Load() (err error) {
 	}
 
 	// Register route
-	route.Register(e.Db)
+	route.Register(e.Db,e.Render)
 
 	return nil
 }
@@ -37,11 +39,7 @@ func (e *Engine) Run() (err error) {
 
 
 func (e *Engine) Render(writer http.ResponseWriter, request *http.Request) {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Printf("panic %v", err)
-		}
-	}()
+
 	// 解析参数，映射到文件
 	err := request.ParseForm()
 	if err != nil {
