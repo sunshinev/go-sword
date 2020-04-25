@@ -2,10 +2,11 @@ package model
 
 import (
 	"fmt"
-	"go-sword/config"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/sunshinev/go-sword/config"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/sunshinev/db2struct"

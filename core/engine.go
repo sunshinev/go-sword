@@ -3,14 +3,15 @@ package core
 import (
 	"database/sql"
 	"encoding/json"
-	"go-sword/config"
-	"go-sword/controller/render"
-	"go-sword/model"
-	"go-sword/response"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/sunshinev/go-sword/config"
+	"github.com/sunshinev/go-sword/controller/render"
+	"github.com/sunshinev/go-sword/model"
+	"github.com/sunshinev/go-sword/response"
 
 	_ "github.com/go-sql-driver/mysql"
 )
