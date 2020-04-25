@@ -1,4 +1,4 @@
-module go-sword
+module github.com/sunshinev/go-sword
 
 go 1.13
 
