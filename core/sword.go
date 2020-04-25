@@ -14,7 +14,6 @@ import (
 
 	"github.com/sunshinev/go-sword/config"
 	"github.com/sunshinev/go-sword/controller/render"
-	"github.com/sunshinev/go-sword/model"
 	"github.com/sunshinev/go-sword/response"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -40,24 +39,18 @@ func (s *Sword) SetConfig(cfg *config.Config) {
 
 func (s *Sword) Run() {
 
-	// Cache Panic
-	defer func() {
-		if err := recover(); err != nil {
-			log.Printf("%v", err)
-		}
-	}()
-
+	// Check MySQL connection
 	err := s.connDb()
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
 
-	//http.HandleFunc("/sword/api/model/create", e.modelCreate)
+	// Default Route
 	http.HandleFunc("/api/model/table_list", s.tableList)
 	http.HandleFunc("/api/model/preview", s.Preview)
 	http.HandleFunc("/api/model/generate", s.Generate)
 
-	// home page
+	// Static file route
 	fs := assetfs.AssetFS{
 		Asset:     resource.Asset,
 		AssetDir:  resource.AssetDir,
@@ -66,17 +59,20 @@ func (s *Sword) Run() {
 	}
 	http.Handle("/", http.FileServer(&fs))
 
-	// render vue component
+	// Render vue component
 	http.HandleFunc("/render", render.Render)
 
-	err = http.ListenAndServe(":8080", nil)
+	// Start server
+	err = http.ListenAndServe(":"+s.Config.ServerPort, nil)
 	if err != nil {
-		log.Fatalf("服务启动失败 %v", err)
+		log.Fatalf("Go-sword start err: %v", err)
 	}
 }
 
+// Check MySQL database connection
 func (s *Sword) connDb() (err error) {
 	c := s.Config.Database
+	// user:password@(localhost)/dbname?charset=utf8&parseTime=True&loc=Local
 	db, err := sql.Open("mysql", c.User+":"+c.Password+"@tcp("+c.Host+":"+strconv.Itoa(c.Port)+")/"+c.Database+"?&parseTime=True")
 	if err != nil {
 		return
@@ -87,10 +83,9 @@ func (s *Sword) connDb() (err error) {
 	return nil
 }
 
+// Get database table list
 func (s *Sword) tableList(w http.ResponseWriter, r *http.Request) {
-	// user:password@(localhost)/dbname?charset=utf8&parseTime=True&loc=Local
-
-	rows, err := s.Db.Query("show tables")
+	rows, err := s.Db.Query("SHOW TABLES")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -99,7 +94,7 @@ func (s *Sword) tableList(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var tableName string
-		rows.Scan(&tableName)
+		err = rows.Scan(&tableName)
 		tables = append(tables, tableName)
 	}
 
@@ -132,13 +127,20 @@ func (s *Sword) Preview(w http.ResponseWriter, r *http.Request) {
 		panic("tableName is empty")
 	}
 
-	m := model.ModelCreate{}
-	m.Init(s.Config)
-	m.Preview(s.Config.Database, data["table_name"])
+	g := Generator{}
+	g.Init(s.Config)
+	g.Preview(s.Config.Database, data["table_name"])
 
-	ret, err := json.Marshal(&m.FileList)
+	ret, err := json.Marshal(&g.FileList)
+	if err != nil {
+		panic(err.Error())
+	}
 
-	w.Write(ret)
+	_, err = w.Write(ret)
+	if err != nil {
+		panic(err.Error())
+	}
+
 }
 
 func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
@@ -157,11 +159,15 @@ func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
 		panic("tableName is empty")
 	}
 
-	m := model.ModelCreate{}
-	m.Init(s.Config)
-	m.Generate(s.Config.Database, data["table_name"])
+	g := Generator{}
+	g.Init(s.Config)
+	g.Generate(s.Config.Database, data["table_name"])
 
-	ret, err := json.Marshal(&m.FileList)
+	ret, err := json.Marshal(&g.FileList)
 
-	w.Write(ret)
+	_, err = w.Write(ret)
+	if err != nil {
+		panic(err.Error())
+	}
+
 }

@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sunshinev/go-sword/assets/stub"
+
 	"github.com/sunshinev/go-sword/config"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -36,8 +38,7 @@ func (m *ModelCreate) Init(c *config.Config) *ModelCreate {
 
 // Entry
 func (m *ModelCreate) parseTable(c *config.DbSet, table string) {
-
-	// Use db2struct (https://github.com/Shelnutt2/db2struct)
+	// Use db2struct (https://github.com/sunshinev/db2struct) Forked (https://github.com/Shelnutt2/db2struct) and modify Generate func
 	columnDataTypes, err := db2struct.GetColumnsFromMysqlTable(c.User, c.Password, c.Host, c.Port, c.Database, table)
 	if err != nil {
 		panic(err.Error())
@@ -89,7 +90,7 @@ func (m *ModelCreate) Preview(c *config.DbSet, table string) {
 	m.FileList = append(m.FileList, controllerFile)
 
 	// Html
-	// create.html
+	// list.html
 	var listHtmlFile = &FileInstance{
 		FilePath:    strings.Join([]string{"view", m.TableName, "list.html"}, string(os.PathSeparator)),
 		FileName:    "list.html",
@@ -281,12 +282,7 @@ import "time"
 // Create model file content
 func (m *ModelCreate) createControllerContent() string {
 	// Read stub
-	file, err := os.Open("stub/controller/controller.stub")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	data, err := ioutil.ReadAll(file)
+	data, err := stub.Asset("stub/controller/controller.stub")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -308,12 +304,7 @@ func (m *ModelCreate) createControllerContent() string {
 // Create model file content
 func (m *ModelCreate) createListHtml() string {
 	// Read stub
-	file, err := os.Open("stub/html/list.stub")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	data, err := ioutil.ReadAll(file)
+	data, err := stub.Asset("stub/html/list.stub")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -376,12 +367,7 @@ func (m *ModelCreate) createRouteContent(filePath string) string {
 
 func (m *ModelCreate) createMainContent() string {
 	// Read stub
-	file, err := os.Open("stub/main.stub")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	data, err := ioutil.ReadAll(file)
+	data, err := stub.Asset("stub/main/main.stub")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -396,12 +382,7 @@ func (m *ModelCreate) createMainContent() string {
 
 func (m *ModelCreate) createCoreContent() string {
 	// Read stub
-	file, err := os.Open("stub/core/core.stub")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	data, err := ioutil.ReadAll(file)
+	data, err := stub.Asset("stub/core/core.stub")
 	if err != nil {
 		panic(err.Error())
 	}

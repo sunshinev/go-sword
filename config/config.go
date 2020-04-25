@@ -17,11 +17,3 @@ type DbSet struct {
 	Port     int
 	Database string
 }
-
-func (c *Config) getRootPath() string {
-	if c.RootPath == "" {
-		c.RootPath = "go-sword-app"
-	}
-
-	return c.RootPath
-}
