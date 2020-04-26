@@ -10,6 +10,17 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+type ResponseRet struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
+}
+
+type ResponseRetList struct {
+	List interface{} `json:"list"`
+}
+
+
 type Engine struct {
 	Db *gorm.DB
 }

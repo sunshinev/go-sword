@@ -73,47 +73,30 @@ func (g *Generator) parseTable(c *config.DbSet, table string) {
 }
 
 func (g *Generator) Preview(c *config.DbSet, table string) {
-
 	g.parseTable(c, table)
+	// Main.go
+	g.gMainFile()
+	// Core.go
+	g.gCoreFile()
+	// Route.go
+	g.gRouteFile()
 	// Model
 	g.gModelFile()
 	// Controller
-	var controllerFile = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "controller", g.TableName, g.TableName+".go"),
-		FileName:    g.TableName + ".go",
-		FileContent: g.createControllerContent(),
-	}
-
-	g.FileList = append(g.FileList, controllerFile)
-
+	g.gControllerFile()
 	// Html
-	// list.html
-	var listHtmlFile = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "view", g.TableName, "list.html"),
-		FileName:    "list.html",
-		FileContent: g.createListHtml(),
-	}
-
-	g.FileList = append(g.FileList, listHtmlFile)
-
-	// Route.go
-	var routeFile = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "route", "route.go"),
-		FileName:    "route.go",
-		FileContent: g.createListHtml(),
-	}
-
-	g.FileList = append(g.FileList, routeFile)
-	// Main.go
-	// Core.go
 	// default.html
+	g.gHtmlDefaultFile()
+	// list.html
+	g.gHtmlListFile()
+
 }
 
 func (g *Generator) Generate(c *config.DbSet, table string) {
 	g.Preview(c, table)
 
 	for _, file := range g.FileList {
-		var path = strings.Join([]string{g.config.RootPath, file.FilePath}, string(os.PathSeparator))
+		var path = file.FilePath
 		_, err := os.Stat(path)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -134,144 +117,41 @@ func (g *Generator) Generate(c *config.DbSet, table string) {
 			panic(err.Error())
 		}
 	}
-
-	// Handle route additional
-	g.generateRoute()
-
-	// Handle main.go additional
-	g.generateMain()
-
-	// Handle core.go additional
-	g.generateCore()
-
-	// Handle default.html additional
-	g.generateDefaultHtml()
 }
 
-func (g *Generator) generateRoute() {
-	var path = filepath.Join(g.config.RootPath, "route", "route.go")
-
-	_, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// Create new file
-			err = os.MkdirAll(strings.ReplaceAll(path, "route.go", ""), 0755)
-			if err != nil {
-				panic(err.Error())
-			}
-
-			// Create new route.go
-			newFile, err := os.Create(path)
-			if err != nil {
-				panic(err.Error())
-			}
-
-			_, err = newFile.Write([]byte(g.createRouteContent("")))
-			if err != nil {
-				panic(err.Error())
-			}
-
-			return
-		}
-
-		panic(err.Error())
+func (g *Generator) gModelFile() {
+	content := g.createModelContent()
+	file := &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "model", g.TableName+".go"),
+		FileName:    g.TableName + ".go",
+		FileContent: content,
 	}
 
-	newFile, err := os.OpenFile(path, os.O_WRONLY, 0755)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	_, err = newFile.Write([]byte(g.createRouteContent(path)))
-	if err != nil {
-		panic(err.Error())
-	}
+	g.FileList = append(g.FileList, file)
 }
 
-func (g *Generator) generateDefaultHtml() {
-	var path = strings.Join([]string{g.config.RootPath, "view", "layout", "default.html"}, string(os.PathSeparator))
-	_, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// Create new file
-			err = os.MkdirAll(strings.ReplaceAll(path, "default.html", ""), 0755)
-			if err != nil {
-				panic(err.Error())
-			}
-
-			// Create new route.go
-			newFile, err := os.Create(path)
-			if err != nil {
-				panic(err.Error())
-			}
-
-			stubPath := strings.Join([]string{"stub", "layout", "default.stub"}, string(os.PathSeparator))
-			_, err = newFile.Write([]byte(g.createDefaultHtml(stubPath)))
-			if err != nil {
-				panic(err.Error())
-			}
-
-			return
-		}
-
-		panic(err.Error())
+// Create model file content
+func (g *Generator) createModelContent() string {
+	// Modify g.Struc & add import
+	if strings.Contains(string(g.Struc), "time.Time") {
+		str := "package " + g.PackageName
+		newStr := "package model" + `
+import "time"
+`
+		return strings.Replace(string(g.Struc), str, newStr, 1)
 	}
 
-	newFile, err := os.OpenFile(path, os.O_WRONLY, 0755)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	_, err = newFile.Write([]byte(g.createDefaultHtml(path)))
-	if err != nil {
-		panic(err.Error())
-	}
+	return string(g.Struc)
 }
 
-func (g *Generator) generateMain() {
-	var path = strings.Join([]string{g.config.RootPath, "main.go"}, string(os.PathSeparator))
-	_, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// Create new file
-			err = os.MkdirAll(strings.ReplaceAll(path, "main.go", ""), 0755)
-			if err != nil {
-				panic(err.Error())
-			}
-
-			newFile, err := os.Create(path)
-			if err != nil {
-				panic(err.Error())
-			}
-			_, err = newFile.Write([]byte(g.createMainContent()))
-			if err != nil {
-				panic(err.Error())
-			}
-		}
+func (g *Generator) gControllerFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "controller", g.TableName, g.TableName+".go"),
+		FileName:    g.TableName + ".go",
+		FileContent: g.createControllerContent(),
 	}
-}
 
-func (g *Generator) generateCore() {
-	var path = strings.Join([]string{g.config.RootPath, "core", "core.go"}, string(os.PathSeparator))
-	_, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// Create new file
-			err = os.MkdirAll(strings.ReplaceAll(path, "core.go", ""), 0755)
-			if err != nil {
-				panic(err.Error())
-			}
-
-			newFile, err := os.Create(path)
-			if err != nil {
-				panic(err.Error())
-			}
-			_, err = newFile.Write([]byte(g.createCoreContent()))
-			if err != nil {
-				panic(err.Error())
-			}
-		}
-	}
+	g.FileList = append(g.FileList, file)
 }
 
 // Create model file content
@@ -286,14 +166,26 @@ func (g *Generator) createControllerContent() string {
 	packageName := g.TableName
 	modelStruct := "model." + g.StructName
 	importModel := g.config.ModuleName + "/" + g.config.RootPath + "/model"
+	importCore := g.config.ModuleName + "/" + g.config.RootPath + "/core"
 
 	content := string(data)
 
 	content = strings.ReplaceAll(content, "<<package_name>>", packageName)
 	content = strings.ReplaceAll(content, "<<model_struct>>", modelStruct)
 	content = strings.ReplaceAll(content, "<<import_model>>", importModel)
+	content = strings.ReplaceAll(content, "<<import_core>>", importCore)
 
 	return content
+}
+
+func (g *Generator) gHtmlListFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "view", g.TableName, "list.html"),
+		FileName:    "list.html",
+		FileContent: g.createListHtml(),
+	}
+
+	g.FileList = append(g.FileList, file)
 }
 
 // Create model file content
@@ -322,20 +214,45 @@ func (g *Generator) createListHtml() string {
 	return content
 }
 
-func (g *Generator) createRouteContent(routePath string) string {
+func (g *Generator) gRouteFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "route", "route.go"),
+		FileName:    "route.go",
+		FileContent: g.getRouteContent(),
+	}
+
+	g.FileList = append(g.FileList, file)
+}
+
+func (g *Generator) getRouteContent() string {
+	var path = filepath.Join(g.config.RootPath, "route", "route.go")
+
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return g.createRouteContent("")
+		}
+
+		panic(err.Error())
+	}
+
+	return g.createRouteContent(path)
+}
+
+func (g *Generator) createRouteContent(path string) string {
 
 	var data = []byte{}
 	var err error
 
 	// Read bytes from stub
-	if routePath == "" {
+	if path == "" {
 		data, err = stub.Asset("stub/route/route.stub")
 		if err != nil {
 			panic(err.Error())
 		}
 	} else {
 		// Open created route.go from rootPath
-		file, err := os.Open(routePath)
+		file, err := os.Open(path)
 		if err != nil {
 			panic(err.Error())
 		}
@@ -372,6 +289,16 @@ func (g *Generator) createRouteContent(routePath string) string {
 	return content
 }
 
+func (g *Generator) gMainFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "main.go"),
+		FileName:    "main.go",
+		FileContent: g.createMainContent(),
+	}
+
+	g.FileList = append(g.FileList, file)
+}
+
 func (g *Generator) createMainContent() string {
 	// Read stub
 	data, err := stub.Asset("stub/main.stub")
@@ -387,6 +314,15 @@ func (g *Generator) createMainContent() string {
 	return content
 }
 
+func (g *Generator) gCoreFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "core", "core.go"),
+		FileName:    "core.go",
+		FileContent: g.createCoreContent(),
+	}
+
+	g.FileList = append(g.FileList, file)
+}
 func (g *Generator) createCoreContent() string {
 	// Read stub
 	data, err := stub.Asset("stub/core/core.stub")
@@ -402,16 +338,52 @@ func (g *Generator) createCoreContent() string {
 	return content
 }
 
-func (g *Generator) createDefaultHtml(filePath string) string {
-	// Read stub
-	file, err := os.Open(filePath)
+func (g *Generator) gHtmlDefaultFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "view", "layout", "default.html"),
+		FileName:    "default.html",
+		FileContent: g.getHtmlDefaultFile(),
+	}
+
+	g.FileList = append(g.FileList, file)
+}
+
+func (g *Generator) getHtmlDefaultFile() string {
+	var path = filepath.Join(g.config.RootPath, "view", "layout", "default.html")
+
+	_, err := os.Stat(path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return g.createDefaultHtml("")
+		}
+
 		panic(err.Error())
 	}
 
-	data, err := ioutil.ReadAll(file)
-	if err != nil {
-		panic(err.Error())
+	return g.createDefaultHtml(path)
+}
+
+func (g *Generator) createDefaultHtml(path string) string {
+	var data = []byte{}
+	var err error
+
+	// Read bytes from stub
+	if path == "" {
+		data, err = stub.Asset("stub/layout/default.stub")
+		if err != nil {
+			panic(err.Error())
+		}
+	} else {
+		// Open created route.go from rootPath
+		file, err := os.Open(path)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		data, err = ioutil.ReadAll(file)
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 
 	// replace
@@ -445,39 +417,26 @@ func (g *Generator) createDefaultHtml(filePath string) string {
 	return content
 }
 
-func (g *Generator) gModelFile() {
-	file := &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "model", g.TableName+".go"),
-		FileName:    g.TableName + ".go",
-		FileContent: g.createModelContent(),
-	}
-
-	g.FileList = append(g.FileList, file)
-}
-
-// Create model file content
-func (g *Generator) createModelContent() string {
-	// Modify g.Struc & add import
-	if strings.Contains(string(g.Struc), "time.Time") {
-		str := "package " + g.PackageName
-		newStr := "package model" + `
-import "time"
-`
-		return strings.Replace(string(g.Struc), str, newStr, 1)
-	}
-
-	return string(g.Struc)
-}
-
-func (g *Generator) readCreatedFile(path) string {
-	// Modify g.Struc & add import
-	if strings.Contains(string(g.Struc), "time.Time") {
-		str := "package " + g.PackageName
-		newStr := "package model" + `
-import "time"
-`
-		return strings.Replace(string(g.Struc), str, newStr, 1)
-	}
-
-	return string(g.Struc)
-}
+//
+//// Read created file content
+//func (g *Generator) readCreatedFile(path string) string {
+//	_, err := os.Stat(path)
+//	if err != nil {
+//		if os.IsNotExist(err) {
+//			return ""
+//		}
+//
+//		panic(err.Error())
+//	}
+//
+//	fileInfo, err := os.OpenFile(path, os.O_WRONLY, 0755)
+//	if err != nil {
+//		panic(err.Error())
+//	}
+//
+//	defer fileInfo.Close()
+//
+//	data, err := ioutil.ReadAll(fileInfo)
+//
+//	return string(data)
+//}

@@ -3,7 +3,7 @@ package <<package_name>>
 import (
 	"encoding/json"
 	"<<import_model>>"
-	"go-sword/response"
+	"<<import_core>>"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,12 +16,12 @@ func List(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 		sqls := []<<model_struct>>{}
 		db.Find(&sqls)
 
-		ret := response.Ret{
-			Code: http.StatusOK,
-			Data: response.List{
-				List: &sqls,
-			},
-		}
+        ret := core.ResponseRet{
+            Code: http.StatusOK,
+            Data: core.ResponseRetList{
+                List: &sqls,
+            },
+        }
 
 		d, err := json.Marshal(&ret)
 		if err != nil {
@@ -59,10 +59,10 @@ func Delete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 
 		db.Delete(&sql)
 
-		ret := response.Ret{
-			Code: http.StatusOK,
-			Msg:  "success",
-		}
+		ret := core.ResponseRet{
+            Code: http.StatusOK,
+            Msg:  "success",
+        }
 
 		d, err := json.Marshal(&ret)
 		if err != nil {
@@ -95,10 +95,10 @@ func Create(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 
 		db.Create(&data)
 
-		ret := response.Ret{
-			Code: http.StatusOK,
-			Msg:  "success",
-		}
+		ret := core.ResponseRet{
+            Code: http.StatusOK,
+            Msg:  "success",
+        }
 
 		d, err := json.Marshal(&ret)
 		if err != nil {
@@ -132,11 +132,11 @@ func Edit(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 		db.First(&data, data.ID)
 		db.Save(&data)
 
-		ret := response.Ret{
-			Code: http.StatusOK,
-			Msg:  "success",
-			Data: &data,
-		}
+		ret := core.ResponseRet{
+            Code: http.StatusOK,
+            Msg:  "success",
+            Data: &data,
+        }
 
 		d, err := json.Marshal(&ret)
 		if err != nil {
@@ -173,11 +173,11 @@ func Detail(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 
 		db.First(&data, params["id"])
 
-		ret := response.Ret{
-			Code: http.StatusOK,
-			Msg:  "success",
-			Data: &data,
-		}
+		ret := core.ResponseRet{
+            Code: http.StatusOK,
+            Msg:  "success",
+            Data: &data,
+        }
 
 		d, err := json.Marshal(&ret)
 		if err != nil {
