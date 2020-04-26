@@ -20,11 +20,12 @@ import (
 )
 
 type Generator struct {
-	Columns     []string
-	Struc       []byte
-	PackageName string
-	StructName  string
-	TableName   string
+	Columns         []string
+	ColumnDataTypes map[string]string
+	Struc           []byte
+	PackageName     string
+	StructName      string
+	TableName       string
 	// Files need to generate
 	FileList []*FileInstance
 	config   *config.Config
@@ -41,6 +42,7 @@ type FileInstance struct {
 
 func (g *Generator) Init(c *config.Config) *Generator {
 	g.config = c
+	g.ColumnDataTypes = make(map[string]string)
 	return g
 }
 
@@ -57,8 +59,10 @@ func (g *Generator) parseTable(c *config.DbSet, table string) {
 	structName = strings.Replace(structName, " ", "", -1)
 
 	// Set columns
-	for name := range *columnDataTypes {
+	columnDT := *columnDataTypes
+	for name := range columnDT {
 		g.Columns = append(g.Columns, name)
+		g.ColumnDataTypes[name] = columnDT[name]["value"]
 	}
 
 	struc, err := db2struct.Generate(*columnDataTypes, table, structName, table, true, true, false)
@@ -251,6 +255,7 @@ func (g *Generator) createCreateHtml() string {
 
 	// replace
 	var info = ""
+	var fieldsType = ""
 
 	for _, name := range g.Columns {
 		// Create ignore `id` field
@@ -258,10 +263,14 @@ func (g *Generator) createCreateHtml() string {
 			continue
 		}
 		info = info + fmt.Sprintf("%s:'',\n", name)
+
+		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, untils.ConvertFieldsType2Js(g.ColumnDataTypes[name]))
+
 	}
 
 	content := string(data)
 
+	content = strings.ReplaceAll(content, "<<js_data_fields_type>>", fieldsType)
 	content = strings.ReplaceAll(content, "<<table_name>>", g.TableName)
 	content = strings.ReplaceAll(content, "<<js_data_info>>", info)
 
@@ -288,13 +297,16 @@ func (g *Generator) createEditHtml() string {
 
 	// replace
 	var info = ""
+	var fieldsType = ""
 
 	for _, name := range g.Columns {
 		info = info + fmt.Sprintf("%s:'',\n", name)
+		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, untils.ConvertFieldsType2Js(g.ColumnDataTypes[name]))
 	}
 
 	content := string(data)
 
+	content = strings.ReplaceAll(content, "<<js_data_fields_type>>", fieldsType)
 	content = strings.ReplaceAll(content, "<<table_name>>", g.TableName)
 	content = strings.ReplaceAll(content, "<<js_data_info>>", info)
 

@@ -20,7 +20,7 @@ func List(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
                     Code: http.StatusInternalServerError,
                     Msg:  fmt.Sprintf("%s", err),
                 })
-                writer.Write([]byte(fmt.Sprintf("%s",err)))
+                writer.Write(msg)
             }
         }()
 
@@ -51,11 +51,11 @@ func Delete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 
 	    defer func() {
             if err := recover(); err != nil {
-            msg, _ := json.Marshal(response.Ret{
-                Code: http.StatusInternalServerError,
-                Msg:  fmt.Sprintf("%s", err),
-            })
-                writer.Write([]byte(fmt.Sprintf("%s",err)))
+                msg, _ := json.Marshal(response.Ret{
+                    Code: http.StatusInternalServerError,
+                    Msg:  fmt.Sprintf("%s", err),
+                })
+                writer.Write(msg)
             }
         }()
 
@@ -102,7 +102,7 @@ func Create(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
                     Code: http.StatusInternalServerError,
                     Msg:  fmt.Sprintf("%s", err),
                 })
-                writer.Write([]byte(fmt.Sprintf("%s",err)))
+                writer.Write(msg)
             }
         }()
 
@@ -144,7 +144,7 @@ func Edit(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
                     Code: http.StatusInternalServerError,
                     Msg:  fmt.Sprintf("%s", err),
                 })
-                writer.Write([]byte(fmt.Sprintf("%s",err)))
+                writer.Write(msg)
             }
         }()
 
@@ -159,8 +159,10 @@ func Edit(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 			panic(err.Error())
 		}
 
-		db.First(&data, data.ID)
-		db.Save(&data)
+		updateData :=  model.GoadminMenu{}
+        db.First(&updateData, data.ID)
+        updateData = data
+        db.Save(&updateData)
 
 		ret := response.Ret{
             Code: http.StatusOK,
@@ -188,7 +190,7 @@ func Detail(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
                     Code: http.StatusInternalServerError,
                     Msg:  fmt.Sprintf("%s", err),
                 })
-                writer.Write([]byte(fmt.Sprintf("%s",err)))
+                writer.Write(msg)
             }
         }()
 		body, err := ioutil.ReadAll(request.Body)

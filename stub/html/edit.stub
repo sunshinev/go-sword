@@ -27,7 +27,10 @@
                 routeId: this.id,
                 info:{
                    <<js_data_info>>
-                }
+                },
+                 fields_type:{
+                     <<js_data_fields_type>>
+                 }
             }
         },
         props: ['id'],
@@ -43,11 +46,28 @@
                 this.$router.go(-1)
             },
             goSave: function() {
+                if(!this.verifyFieldType()) {
+                    return
+                }
                 this.axios
-                    .post('/api/<<table_name>/edit',this.info)
+                    .post('/api/<<table_name>>/edit',this.info)
                     .then(response=>{
                         Object.assign(this.info ,response.data.data)
                     })
+            },
+            verifyFieldType: function () {
+                for(var name in this.info) {
+                    if(this.fields_type[name] === "number") {
+                        if(isNaN(this.info[name])) {
+                            alert(name+" is not a number")
+                            return false
+                        }
+                        this.info[name] = Number(this.info[name])
+                    }else if(this.fields_type[name] === "string") {
+                        this.info[name] = String(this.info[name])
+                    }
+                }
+                return true;
             }
         },
         created: function() {
