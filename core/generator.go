@@ -179,8 +179,8 @@ func (g *Generator) createControllerContent() string {
 	// replace
 	packageName := g.TableName
 	modelStruct := "model." + g.StructName
-	importModel := g.config.ModuleName + "/" + g.config.RootPath + "/model"
-	importResponse := g.config.ModuleName + "/" + g.config.RootPath + "/core/response"
+	importModel := g.config.RootPath + "/model"
+	importResponse := g.config.RootPath + "/core/response"
 
 	content := string(data)
 
@@ -287,7 +287,7 @@ func (g *Generator) createRouteContent(path string) string {
 	str = strings.ReplaceAll(str, "%s", g.TableName)
 
 	var importStr = `"%s/%s/controller/%s"`
-	importStr = fmt.Sprintf(importStr, g.config.ModuleName, g.config.RootPath, g.TableName)
+	importStr = fmt.Sprintf(importStr, g.config.RootPath, g.TableName)
 
 	// Check if content repeated,if true then ignore replace
 	content := string(data)
@@ -320,7 +320,7 @@ func (g *Generator) createMainContent() string {
 		panic(err.Error())
 	}
 
-	str := strings.Join([]string{g.config.ModuleName, g.config.RootPath, "core"}, "/")
+	str := strings.Join([]string{g.config.RootPath, "core"}, "/")
 
 	content := string(data)
 
@@ -344,7 +344,7 @@ func (g *Generator) createCoreContent() string {
 		panic(err.Error())
 	}
 
-	str := strings.Join([]string{g.config.ModuleName, g.config.RootPath, "route"}, "/")
+	str := strings.Join([]string{g.config.RootPath, "route"}, "/")
 
 	content := string(data)
 
