@@ -15,10 +15,10 @@ import (
 
 func Register(db *gorm.DB,render func(writer http.ResponseWriter, request *http.Request)) {
 	// Static file
-	http.Handle("/go_sword_public/", http.StripPrefix("/go_sword_public/", http.FileServer(http.Dir("resource/web/base/dist"))))
+	http.Handle("/go_sword_public/", http.StripPrefix("/go_sword_public/", http.FileServer(http.Dir("resource/dist"))))
 
 	// Default index.html
-	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("resource/web/base/dist"))))
+	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("resource/dist"))))
 
 	// Render Vue html component
 	http.HandleFunc("/render", render)

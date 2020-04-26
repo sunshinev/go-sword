@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sunshinev/go-sword/assets/resource"
+
 	"github.com/sunshinev/go-sword/assets/stub"
 
 	"github.com/sunshinev/go-sword/config"
@@ -84,6 +86,8 @@ func (g *Generator) Preview(c *config.DbSet, table string) {
 	g.gModelFile()
 	// Controller
 	g.gControllerFile()
+	// Response
+	g.gResponseFile()
 	// Html
 	// default.html
 	g.gHtmlDefaultFile()
@@ -117,6 +121,9 @@ func (g *Generator) Generate(c *config.DbSet, table string) {
 			panic(err.Error())
 		}
 	}
+
+	// Explode resource
+	g.gResourceRestore()
 }
 
 func (g *Generator) gModelFile() {
@@ -166,14 +173,14 @@ func (g *Generator) createControllerContent() string {
 	packageName := g.TableName
 	modelStruct := "model." + g.StructName
 	importModel := g.config.ModuleName + "/" + g.config.RootPath + "/model"
-	importCore := g.config.ModuleName + "/" + g.config.RootPath + "/core"
+	importResponse := g.config.ModuleName + "/" + g.config.RootPath + "/core/response"
 
 	content := string(data)
 
 	content = strings.ReplaceAll(content, "<<package_name>>", packageName)
 	content = strings.ReplaceAll(content, "<<model_struct>>", modelStruct)
 	content = strings.ReplaceAll(content, "<<import_model>>", importModel)
-	content = strings.ReplaceAll(content, "<<import_core>>", importCore)
+	content = strings.ReplaceAll(content, "<<import_response>>", importResponse)
 
 	return content
 }
@@ -417,26 +424,29 @@ func (g *Generator) createDefaultHtml(path string) string {
 	return content
 }
 
-//
-//// Read created file content
-//func (g *Generator) readCreatedFile(path string) string {
-//	_, err := os.Stat(path)
-//	if err != nil {
-//		if os.IsNotExist(err) {
-//			return ""
-//		}
-//
-//		panic(err.Error())
-//	}
-//
-//	fileInfo, err := os.OpenFile(path, os.O_WRONLY, 0755)
-//	if err != nil {
-//		panic(err.Error())
-//	}
-//
-//	defer fileInfo.Close()
-//
-//	data, err := ioutil.ReadAll(fileInfo)
-//
-//	return string(data)
-//}
+func (g *Generator) gResponseFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "core", "response", "response.go"),
+		FileName:    "response.go",
+		FileContent: g.createResponseContent(),
+	}
+
+	g.FileList = append(g.FileList, file)
+}
+
+func (g *Generator) createResponseContent() string {
+	// Read stub
+	data, err := stub.Asset("stub/core/response/response.stub")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return string(data)
+}
+
+func (g *Generator) gResourceRestore() {
+	err := resource.RestoreAssets(g.config.RootPath, "resource/dist")
+	if err != nil {
+		panic(err.Error())
+	}
+}

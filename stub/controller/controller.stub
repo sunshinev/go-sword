@@ -3,7 +3,7 @@ package <<package_name>>
 import (
 	"encoding/json"
 	"<<import_model>>"
-	"<<import_core>>"
+	"<<import_response>>"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,9 +16,9 @@ func List(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 		sqls := []<<model_struct>>{}
 		db.Find(&sqls)
 
-        ret := core.ResponseRet{
+        ret := response.Ret{
             Code: http.StatusOK,
-            Data: core.ResponseRetList{
+            Data: response.List{
                 List: &sqls,
             },
         }
@@ -59,7 +59,7 @@ func Delete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 
 		db.Delete(&sql)
 
-		ret := core.ResponseRet{
+		ret := response.Ret{
             Code: http.StatusOK,
             Msg:  "success",
         }
@@ -95,7 +95,7 @@ func Create(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 
 		db.Create(&data)
 
-		ret := core.ResponseRet{
+		ret := response.Ret{
             Code: http.StatusOK,
             Msg:  "success",
         }
@@ -132,7 +132,7 @@ func Edit(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 		db.First(&data, data.ID)
 		db.Save(&data)
 
-		ret := core.ResponseRet{
+		ret := response.Ret{
             Code: http.StatusOK,
             Msg:  "success",
             Data: &data,
@@ -173,7 +173,7 @@ func Detail(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 
 		db.First(&data, params["id"])
 
-		ret := core.ResponseRet{
+		ret := response.Ret{
             Code: http.StatusOK,
             Msg:  "success",
             Data: &data,
