@@ -3,10 +3,12 @@ package core
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/sunshinev/go-sword/assets/view"
 
@@ -76,6 +78,8 @@ func (s *Sword) Run() {
 
 	// Render vue component
 	http.HandleFunc("/render", s.Render)
+
+	s.Welcome()
 
 	// Start server
 	err = http.ListenAndServe(":"+s.Config.ServerPort, nil)
@@ -238,4 +242,23 @@ func (s *Sword) readFile(path string) []byte {
 	}
 
 	return body
+}
+
+func (s *Sword) Welcome() {
+	str := "Go-Sword will create new project named " + s.Config.RootPath + " in current directory" +
+		"\n\n[Server info]" +
+		"\nServer port : " + s.Config.ServerPort +
+		"\nProject module : " + s.Config.RootPath +
+		"\n\n[db info]" +
+		"\nMySQL host : " + s.Config.Database.Host +
+		"\nMySQL port : " + strconv.Itoa(s.Config.Database.Port) +
+		"\nMySQL user : " + s.Config.Database.User +
+		"\nMySQL password : " + s.Config.Database.Password +
+		"\n\nStart successful, server is running ...\n" +
+		"Please request: " +
+		strings.Join([]string{"http://localhost:", s.Config.ServerPort}, "") +
+		"\n"
+
+	fmt.Println(str)
+
 }
