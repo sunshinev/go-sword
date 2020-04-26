@@ -286,8 +286,8 @@ func (g *Generator) createRouteContent(path string) string {
 
 	str = strings.ReplaceAll(str, "%s", g.TableName)
 
-	var importStr = `"%s/%s/controller/%s"`
-	importStr = fmt.Sprintf(importStr, g.config.RootPath, g.TableName, g.TableName)
+	var importStr = `"%s/controller/%s"`
+	importStr = fmt.Sprintf(importStr, g.config.RootPath, g.TableName)
 
 	// Check if content repeated,if true then ignore replace
 	content := string(data)
