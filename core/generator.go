@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sunshinev/go-sword/core/untils"
+
 	"github.com/sunshinev/go-sword/assets/resource"
 
 	"github.com/sunshinev/go-sword/assets/stub"
@@ -96,11 +98,16 @@ func (g *Generator) Preview(c *config.DbSet, table string) {
 
 }
 
-func (g *Generator) Generate(c *config.DbSet, table string) {
+func (g *Generator) Generate(c *config.DbSet, table string, files []string) {
 	g.Preview(c, table)
 
 	for _, file := range g.FileList {
 		var path = file.FilePath
+		// Files filter, only create selected file
+		if !untils.IsContain(path, files) {
+			continue
+		}
+
 		_, err := os.Stat(path)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -122,7 +129,7 @@ func (g *Generator) Generate(c *config.DbSet, table string) {
 		}
 	}
 
-	// Explode resource
+	// Explode resource, Recreate every time you click generate button
 	g.gResourceRestore()
 }
 

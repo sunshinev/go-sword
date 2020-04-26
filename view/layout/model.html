@@ -94,7 +94,7 @@
             preview: function () {
                 let that = this
 
-                if (this.table_name == "") {
+                if (this.table_name === "") {
                     alert("Please choose MySQL table");
                     return
                 }
@@ -115,9 +115,14 @@
                     return
                 }
 
+                if (this.table_name === "") {
+                    alert("Please choose MySQL table");
+                    return
+                }
+
                 let that = this
                 this.axios
-                    .post('/api/model/generate', {table_name: this.table_name})
+                    .post('/api/model/generate', {table_name: this.table_name,files:this.waitingfiles})
                     .then(response => {
                         if (response.data.code === 200) {
                             console.info(response.data)

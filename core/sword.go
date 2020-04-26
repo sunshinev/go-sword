@@ -11,7 +11,6 @@ import (
 	"github.com/sunshinev/go-sword/assets/view"
 
 	"github.com/sunshinev/go-sword/assets/resource"
-	"github.com/sunshinev/go-sword/go-sword-app/core/response"
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 
@@ -28,6 +27,11 @@ type Ret struct {
 
 type List struct {
 	List interface{} `json:"list"`
+}
+
+type GenerateParams struct {
+	TableName string   `json:"table_name"`
+	Files     []string `json:"files"`
 }
 
 // Engine
@@ -111,7 +115,7 @@ func (s *Sword) tableList(w http.ResponseWriter, r *http.Request) {
 
 	jsonData, err := json.Marshal(Ret{
 		Code: http.StatusOK,
-		Data: response.List{
+		Data: List{
 			List: tables,
 		},
 	})
@@ -165,19 +169,23 @@ func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 
-	var data map[string]string
+	var data = &GenerateParams{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	if data["table_name"] == "" {
+	if data.TableName == "" {
 		panic("tableName is empty")
+	}
+
+	if len(data.Files) == 0 {
+		panic("Files is empty")
 	}
 
 	g := Generator{}
 	g.Init(s.Config)
-	g.Generate(s.Config.Database, data["table_name"])
+	g.Generate(s.Config.Database, data.TableName, data.Files)
 
 	ret, err := json.Marshal(Ret{
 		Code: http.StatusOK,
