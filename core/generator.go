@@ -29,12 +29,12 @@ type Generator struct {
 }
 
 type FileInstance struct {
-	FileName    string
-	FilePath    string
-	FileContent string
-	Diff        string
-	IsDiff      bool
-	IsNew       bool
+	FileName    string `json:"file_name"`
+	FilePath    string `json:"file_path"`
+	FileContent string `json:"file_content"`
+	Diff        string `json:"diff"`
+	IsDiff      bool   `json:"is_diff"`
+	IsNew       bool   `json:"is_new"`
 }
 
 func (g *Generator) Init(c *config.Config) *Generator {

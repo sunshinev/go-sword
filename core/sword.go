@@ -8,15 +8,27 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/sunshinev/go-sword/assets/view"
+
 	"github.com/sunshinev/go-sword/assets/resource"
+	"github.com/sunshinev/go-sword/go-sword-app/core/response"
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 
 	"github.com/sunshinev/go-sword/config"
-	"github.com/sunshinev/go-sword/response"
 
 	_ "github.com/go-sql-driver/mysql"
 )
+
+type Ret struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
+}
+
+type List struct {
+	List interface{} `json:"list"`
+}
 
 // Engine
 type Sword struct {
@@ -97,7 +109,7 @@ func (s *Sword) tableList(w http.ResponseWriter, r *http.Request) {
 		tables = append(tables, tableName)
 	}
 
-	jsonData, err := json.Marshal(response.Ret{
+	jsonData, err := json.Marshal(Ret{
 		Code: http.StatusOK,
 		Data: response.List{
 			List: tables,
@@ -130,7 +142,12 @@ func (s *Sword) Preview(w http.ResponseWriter, r *http.Request) {
 	g.Init(s.Config)
 	g.Preview(s.Config.Database, data["table_name"])
 
-	ret, err := json.Marshal(&g.FileList)
+	ret, err := json.Marshal(Ret{
+		Code: http.StatusOK,
+		Data: List{
+			List: &g.FileList,
+		},
+	})
 	if err != nil {
 		panic(err.Error())
 	}
@@ -162,7 +179,12 @@ func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
 	g.Init(s.Config)
 	g.Generate(s.Config.Database, data["table_name"])
 
-	ret, err := json.Marshal(&g.FileList)
+	ret, err := json.Marshal(Ret{
+		Code: http.StatusOK,
+		Data: List{
+			List: &g.FileList,
+		},
+	})
 
 	_, err = w.Write(ret)
 	if err != nil {
@@ -191,9 +213,8 @@ func (s *Sword) Render(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// 从view目录中寻找文件
-	body := s.readFile("view" + path + ".html")
-
-	// body, err := view.Asset("view" + path + ".html")
+	//body := s.readFile("view" + path + ".html")
+	body, err := view.Asset("view" + path + ".html")
 
 	_, err = writer.Write(body)
 
