@@ -13,6 +13,12 @@ import (
 
 func List(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
+	     defer func() {
+            if err := recover(); err != nil {
+                writer.Write([]byte(fmt.Sprintf("%s",err)))
+            }
+        }()
+
 		sqls := []<<model_struct>>{}
 		db.Find(&sqls)
 
@@ -25,20 +31,24 @@ func List(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 
 		d, err := json.Marshal(&ret)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 
 		_, err = writer.Write(d)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 	}
 }
 
 func Delete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
+
+	    defer func() {
+            if err := recover(); err != nil {
+                writer.Write([]byte(fmt.Sprintf("%s",err)))
+            }
+        }()
 
 		body, err := ioutil.ReadAll(request.Body)
 		if err != nil {
@@ -49,8 +59,7 @@ func Delete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 		data := make(map[string]int)
 		err = json.Unmarshal(body, &data)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 
 		sql := <<model_struct>>{
@@ -66,31 +75,33 @@ func Delete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 
 		d, err := json.Marshal(&ret)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 
 		_, err = writer.Write(d)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 	}
 }
 
 func Create(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
+	    defer func() {
+            if err := recover(); err != nil {
+                writer.Write([]byte(fmt.Sprintf("%s",err)))
+            }
+        }()
+
 		body, err := ioutil.ReadAll(request.Body)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 
 		data := <<model_struct>>{}
 		err = json.Unmarshal(body, &data)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 
 		db.Create(&data)
@@ -102,31 +113,33 @@ func Create(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 
 		d, err := json.Marshal(&ret)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 
 		_, err = writer.Write(d)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 	}
 }
 
 func Edit(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
+	    defer func() {
+            if err := recover(); err != nil {
+                writer.Write([]byte(fmt.Sprintf("%s",err)))
+            }
+        }()
+
 		body, err := ioutil.ReadAll(request.Body)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 
 		data := <<model_struct>>{}
 		err = json.Unmarshal(body, &data)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 
 		db.First(&data, data.ID)
@@ -140,24 +153,26 @@ func Edit(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 
 		d, err := json.Marshal(&ret)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 
 		_, err = writer.Write(d)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 	}
 }
 
 func Detail(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
+	    defer func() {
+            if err := recover(); err != nil {
+                writer.Write([]byte(fmt.Sprintf("%s",err)))
+            }
+        }()
 		body, err := ioutil.ReadAll(request.Body)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 
 		log.Printf("%s", body)
@@ -165,8 +180,7 @@ func Detail(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 		params := make(map[string]int)
 		err = json.Unmarshal(body, &params)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 
 		data := <<model_struct>>{}
@@ -181,14 +195,17 @@ func Detail(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 
 		d, err := json.Marshal(&ret)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 
 		_, err = writer.Write(d)
 		if err != nil {
-			log.Printf("%v", err)
-			return
+			panic(err.Error())
 		}
 	}
+}
+
+func BatchDelete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
+    return func(writer http.ResponseWriter, request *http.Request) {
+    }
 }

@@ -253,7 +253,11 @@ func (g *Generator) createCreateHtml() string {
 	var info = ""
 
 	for _, name := range g.Columns {
-		info = info + fmt.Sprintf("'%s',\n", name)
+		// Create ignore `id` field
+		if name == "id" || name == "created_at" || name == "updated_at" {
+			continue
+		}
+		info = info + fmt.Sprintf("%s:'',\n", name)
 	}
 
 	content := string(data)
@@ -286,7 +290,7 @@ func (g *Generator) createEditHtml() string {
 	var info = ""
 
 	for _, name := range g.Columns {
-		info = info + fmt.Sprintf("'%s',\n", name)
+		info = info + fmt.Sprintf("%s:'',\n", name)
 	}
 
 	content := string(data)
@@ -319,7 +323,7 @@ func (g *Generator) createDetailHtml() string {
 	var info = ""
 
 	for _, name := range g.Columns {
-		info = info + fmt.Sprintf("'%s',\n", name)
+		info = info + fmt.Sprintf("%s:'',\n", name)
 	}
 
 	content := string(data)
@@ -384,7 +388,10 @@ func (g *Generator) createRouteContent(path string) string {
 	// Route tag %s
 	http.HandleFunc("/api/%s/list", %s.List(db))
 	http.HandleFunc("/api/%s/delete", %s.Delete(db))
-	http.HandleFunc("/api/%s/detail", %s.Detail(db))`
+	http.HandleFunc("/api/%s/detail", %s.Detail(db))
+	http.HandleFunc("/api/%s/create", %s.Create(db))
+	http.HandleFunc("/api/%s/edit", %s.Edit(db))
+	http.HandleFunc("/api/%s/batch_delete", %s.BatchDelete(db))`
 
 	str = strings.ReplaceAll(str, "%s", g.TableName)
 

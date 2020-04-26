@@ -44,7 +44,7 @@
             },
             goSave: function() {
                 this.axios
-                    .post('/api/<<table_name>/save',this.info)
+                    .post('/api/<<table_name>/edit',this.info)
                     .then(response=>{
                         Object.assign(this.info ,response.data.data)
                     })
