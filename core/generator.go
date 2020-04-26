@@ -95,6 +95,9 @@ func (g *Generator) Preview(c *config.DbSet, table string) {
 	g.gHtmlDefaultFile()
 	// list.html
 	g.gHtmlListFile()
+	g.gHtmlCreateFile()
+	g.gHtmlDetailFile()
+	g.gHtmlEditFile()
 
 }
 
@@ -224,6 +227,105 @@ func (g *Generator) createListHtml() string {
 	content = strings.ReplaceAll(content, "<<table_name>>", g.TableName)
 	content = strings.ReplaceAll(content, "<<js_data_column_list>>", columnList)
 	content = strings.ReplaceAll(content, "<<js_data_search_fields>>", searchFields)
+
+	return content
+}
+
+func (g *Generator) gHtmlCreateFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "view", g.TableName, "create.html"),
+		FileName:    "create.html",
+		FileContent: g.createCreateHtml(),
+	}
+
+	g.FileList = append(g.FileList, file)
+}
+
+// Create  file content
+func (g *Generator) createCreateHtml() string {
+	// Read stub
+	data, err := stub.Asset("stub/html/create.stub")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// replace
+	var info = ""
+
+	for _, name := range g.Columns {
+		info = info + fmt.Sprintf("'%s',\n", name)
+	}
+
+	content := string(data)
+
+	content = strings.ReplaceAll(content, "<<table_name>>", g.TableName)
+	content = strings.ReplaceAll(content, "<<js_data_info>>", info)
+
+	return content
+}
+
+func (g *Generator) gHtmlEditFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "view", g.TableName, "edit.html"),
+		FileName:    "edit.html",
+		FileContent: g.createEditHtml(),
+	}
+
+	g.FileList = append(g.FileList, file)
+}
+
+// Create  file content
+func (g *Generator) createEditHtml() string {
+	// Read stub
+	data, err := stub.Asset("stub/html/edit.stub")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// replace
+	var info = ""
+
+	for _, name := range g.Columns {
+		info = info + fmt.Sprintf("'%s',\n", name)
+	}
+
+	content := string(data)
+
+	content = strings.ReplaceAll(content, "<<table_name>>", g.TableName)
+	content = strings.ReplaceAll(content, "<<js_data_info>>", info)
+
+	return content
+}
+
+func (g *Generator) gHtmlDetailFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "view", g.TableName, "detail.html"),
+		FileName:    "detail.html",
+		FileContent: g.createDetailHtml(),
+	}
+
+	g.FileList = append(g.FileList, file)
+}
+
+// Create  file content
+func (g *Generator) createDetailHtml() string {
+	// Read stub
+	data, err := stub.Asset("stub/html/detail.stub")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// replace
+	var info = ""
+
+	for _, name := range g.Columns {
+		info = info + fmt.Sprintf("'%s',\n", name)
+	}
+
+	content := string(data)
+
+	content = strings.ReplaceAll(content, "<<table_name>>", g.TableName)
+	content = strings.ReplaceAll(content, "<<js_data_info>>", info)
 
 	return content
 }

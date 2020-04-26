@@ -25,15 +25,7 @@
             return {
                 routeId: this.id,
                 info:{
-                    id:'',
-                    name:'',
-                    email:'',
-                    email_verified_at:'',
-                    password:'',
-                    remember_token:'',
-                    created_at:'',
-                    updated_at:'',
-
+                   <<js_data_info>>
                 }
             }
         },
@@ -41,7 +33,7 @@
         methods: {
             initApiDetail: function() {
                 this.axios
-                    .post('/api/admin/users/detail',{id:parseInt(this.routeId)})
+                    .post('/api/<<table_name>>/detail',{id:parseInt(this.routeId)})
                     .then(response=>{
                         this.info = response.data.data
                     })

@@ -26,15 +26,7 @@
             return {
                 routeId: this.id,
                 info:{
-                    id:'',
-                    name:'',
-                    email:'',
-                    email_verified_at:'',
-                    password:'',
-                    remember_token:'',
-                    created_at:'',
-                    updated_at:'',
-
+                   <<js_data_info>>
                 }
             }
         },
@@ -45,7 +37,7 @@
             },
             goSave: function() {
                 this.axios
-                    .post('/api/admin/users/save',JSON.stringify(this.info))
+                    .post('/api/<<table_name>>/save',JSON.stringify(this.info))
                     .then(response=>{
                         Object.assign(this.info ,response.data.data)
                     })
