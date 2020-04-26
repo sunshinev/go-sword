@@ -9,12 +9,17 @@ import (
 	"net/http"
 
 	"github.com/jinzhu/gorm"
+	"fmt"
 )
 
 func List(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 	     defer func() {
             if err := recover(); err != nil {
+                msg, _ := json.Marshal(response.Ret{
+                    Code: http.StatusInternalServerError,
+                    Msg:  fmt.Sprintf("%s", err),
+                })
                 writer.Write([]byte(fmt.Sprintf("%s",err)))
             }
         }()
@@ -46,6 +51,10 @@ func Delete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 
 	    defer func() {
             if err := recover(); err != nil {
+            msg, _ := json.Marshal(response.Ret{
+                Code: http.StatusInternalServerError,
+                Msg:  fmt.Sprintf("%s", err),
+            })
                 writer.Write([]byte(fmt.Sprintf("%s",err)))
             }
         }()
@@ -89,6 +98,10 @@ func Create(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 	return func(writer http.ResponseWriter, request *http.Request) {
 	    defer func() {
             if err := recover(); err != nil {
+                msg, _ := json.Marshal(response.Ret{
+                    Code: http.StatusInternalServerError,
+                    Msg:  fmt.Sprintf("%s", err),
+                })
                 writer.Write([]byte(fmt.Sprintf("%s",err)))
             }
         }()
@@ -127,6 +140,10 @@ func Edit(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 	    defer func() {
             if err := recover(); err != nil {
+                msg, _ := json.Marshal(response.Ret{
+                    Code: http.StatusInternalServerError,
+                    Msg:  fmt.Sprintf("%s", err),
+                })
                 writer.Write([]byte(fmt.Sprintf("%s",err)))
             }
         }()
@@ -167,6 +184,10 @@ func Detail(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 	return func(writer http.ResponseWriter, request *http.Request) {
 	    defer func() {
             if err := recover(); err != nil {
+                msg, _ := json.Marshal(response.Ret{
+                    Code: http.StatusInternalServerError,
+                    Msg:  fmt.Sprintf("%s", err),
+                })
                 writer.Write([]byte(fmt.Sprintf("%s",err)))
             }
         }()
