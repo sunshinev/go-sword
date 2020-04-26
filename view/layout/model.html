@@ -1,51 +1,50 @@
 <template>
     <div>
-    <i-row>
-        <i-col span="12">
-            <i-form :label-width="200" method="post">
-                <i-form-item label="MySQL table">
-                    <i-auto-complete :data="table_list" v-model="table_name"
-                                     placeholder="Click to choose MySQL table"></i-auto-complete>
-                </i-form-item>
-                <i-form-item>
-                    <i-button type="primary" @click="preview">Preview</i-button>
-                    <i-button type="success" @click="generate">Generate</i-button>
-                </i-form-item>
-            </i-form>
-            <i-alert type="" show-icon>
-                <span slot="desc"></span>
-            </i-alert>
-        </i-col>
-    </i-row>
-    <i-row>
-        <i-col span="20">
-            <div style="text-align: right">
-                <i-button @click="handleSelectAll(true)">Select all</i-button>
-                <i-button @click="handleSelectAll(false)">Unselect all</i-button>
-            </div>
-            <br>
-            <i-table :columns="table_col" :data="table_data" ref="selection"
-                     @on-selection-change="table_selection_change">
-                <template slot-scope="{ row, index }" slot="table_button">
-                    <i-button type="info" size="small" @click="openModal(index)">Detail</i-button>
-                    <template v-if="row.is_diff == 'y'">
-                        <i-button type="warning" size="small" @click="openDiffModal(index)">diff</i-button>
+        <i-row>
+            <i-col span="12">
+                <i-form :label-width="200" method="post">
+                    <i-form-item label="MySQL table">
+                        <i-auto-complete :data="table_list" v-model="table_name"
+                                         placeholder="Click to choose MySQL table"></i-auto-complete>
+                    </i-form-item>
+                    <i-form-item>
+                        <i-button type="primary" @click="preview">Preview</i-button>
+                        <i-button type="success" @click="generate">Generate</i-button>
+                    </i-form-item>
+                </i-form>
+                <i-alert type="" show-icon>
+                    <span slot="desc"></span>
+                </i-alert>
+            </i-col>
+        </i-row>
+        <i-row>
+            <i-col span="20">
+                <div style="text-align: right">
+                    <i-button @click="handleSelectAll(true)">Select all</i-button>
+                    <i-button @click="handleSelectAll(false)">Unselect all</i-button>
+                </div>
+                <br>
+                <i-table :columns="table_col" :data="table_data" ref="selection" @on-selection-change="table_selection_change">
+                    <template slot-scope="{ row, index }" slot="table_button">
+                        <i-button type="info" size="small" @click="openModal(index)">Detail</i-button>
+                        <template v-if="row.is_diff == 'y'">
+                            <i-button type="warning" size="small" @click="openDiffModal(index)">diff</i-button>
+                        </template>
                     </template>
-                </template>
-            </i-table>
-        </i-col>
-    </i-row>
-    <i-modal v-model="is_show_detail_model" :title="detail_model_title" width="80">
-        <pre><code v-text="detail_model_content"></code></pre>
-    </i-modal>
+                </i-table>
+            </i-col>
+        </i-row>
+        <i-modal v-model="is_show_detail_model" :title="detail_model_title" width="80">
+            <pre><code v-text="detail_model_content"></code></pre>
+        </i-modal>
     </div>
 </template>
 <script type="text/javascript">
     module.exports = {
-        data: function() {
+        data: function () {
             return {
                 table_list: [],
-                table_name:'',
+                table_name: '',
                 table_col: [
                     {
                         type: 'index',
@@ -67,15 +66,15 @@
                         align: 'center'
                     },
                 ],
-                table_data:[],
+                table_data: [],
                 waitingfiles: [],
-                is_show_detail_model:false,
-                detail_model_content:'',
-                detail_model_title:''
+                is_show_detail_model: false,
+                detail_model_content: '',
+                detail_model_title: ''
             }
         },
         methods: {
-            getTableList: function() {
+            getTableList: function () {
                 let that = this
 
                 this.axios
@@ -83,16 +82,16 @@
                     .then(response => {
                         if (response.data.code == 200) {
                             that.table_list = response.data.data.list
-                        }else {
+                        } else {
                             alert(response.data.msg)
                         }
                     })
             },
-            handleTableData:function(tableData) {
+            handleTableData: function (tableData) {
                 this.table_data = tableData
                 console.info(this.table_data)
             },
-            preview:function() {
+            preview: function () {
                 let that = this
 
                 if (this.table_name == "") {
@@ -101,23 +100,28 @@
                 }
 
                 this.axios
-                    .post('/api/model/preview',{table_name:this.table_name})
+                    .post('/api/model/preview', {table_name: this.table_name})
                     .then(response => {
-                        if (response.data.code == 200) {
+                        if (response.data.code === 200) {
                             that.handleTableData(response.data.data.list)
-                        }else {
+                        } else {
                             alert(response.data.msg)
                         }
                     })
             },
-            generate:function() {
+            generate: function () {
+                if (this.waitingfiles.length === 0) {
+                    alert("Please choose files!")
+                    return
+                }
+
                 let that = this
                 this.axios
-                    .post('/api/model/generate',{table_name:this.table_name})
+                    .post('/api/model/generate', {table_name: this.table_name})
                     .then(response => {
-                        if (response.data.code == 200) {
+                        if (response.data.code === 200) {
                             console.info(response.data)
-                        }else {
+                        } else {
                             alert(response.data.msg)
                         }
                     })
@@ -133,11 +137,11 @@
             table_selection_change(rows) {
                 this.waitingfiles = []
                 for (var i in rows) {
-                    this.waitingfiles.push(rows[i].path);
+                    this.waitingfiles.push(rows[i].file_path);
                 }
             }
         },
-        mounted: function() {
+        mounted: function () {
             this.getTableList()
         }
     }
