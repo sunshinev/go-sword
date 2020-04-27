@@ -1,7 +1,7 @@
 <template>
     <div class="layout">
         <i-breadcrumb :style="{margin: '24px 24px'}">
-            <i-breadcrumb-item>users</i-breadcrumb-item>
+            <i-breadcrumb-item><<table_name>></i-breadcrumb-item>
             <i-breadcrumb-item>detail</i-breadcrumb-item>
         </i-breadcrumb>
         <i-content :style="{padding: '24px', minHeight: '280px', background: '#fff'}">
