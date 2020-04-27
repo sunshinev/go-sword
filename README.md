@@ -1,4 +1,4 @@
-# Go-sword
+# Go-sword 🗡️
 
 [【点我访问中文文档_cn_zh】](https://github.com/sunshinev/go-sword/blob/master/README_zh.md)
 
