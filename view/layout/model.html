@@ -35,7 +35,7 @@
             </i-col>
         </i-row>
         <i-modal v-model="is_show_detail_model" :title="detail_model_title" width="80">
-            <pre><code v-text="detail_model_content"></code></pre>
+            <pre v-highlightjs="detail_model_content"><code></code></pre>
         </i-modal>
     </div>
 </template>

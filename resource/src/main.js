@@ -14,6 +14,12 @@ import VueAxios from 'vue-axios';
 import axios from 'axios';
 Vue.use(VueAxios, axios)
 
+import VueHighlightJS from 'vue-highlightjs'
+import 'highlight.js/styles/github.css'
+
+// Tell Vue.js to use vue-highlightjs
+Vue.use(VueHighlightJS)
+
 import App from './App.vue'
 
 Vue.config.productionTip = false
