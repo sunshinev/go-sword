@@ -16,7 +16,7 @@
     }
 </style>
 <template>
-    <div style="margin-top: 50px">
+    <i-layout style="padding:50px 0;height: 80vh;">
         <i-row>
             <i-col span="12">
                 <i-form :label-width="200" method="post">
@@ -63,7 +63,7 @@
             <code-diff :old-string="file_old_content" :new-string="file_new_content" :context="10"/>
         </i-modal>
 
-    </div>
+    </i-layout>
 </template>
 <script type="text/javascript">
     module.exports = {
@@ -165,8 +165,8 @@
                     .then(response => {
                         if (response.data.code === 200) {
                             let list = response.data.data.list
-                            for( var i in list) {
-                                this.$Message.success("Generate success:"+ list[i].file_path)
+                            for (var i in list) {
+                                this.$Message.success("Generate success:" + list[i].file_path)
                             }
                         } else {
                             alert(response.data.msg)
@@ -188,24 +188,24 @@
                 this.handleSelectAll(false)
 
                 if (status === "diff") {
-                    for(var i in  this.table_data) {
-                        if(this.table_data[i].is_diff) {
+                    for (var i in  this.table_data) {
+                        if (this.table_data[i].is_diff) {
                             this.$refs.selection.toggleSelect(i)
                         }
                     }
                 }
 
                 if (status === "new") {
-                    for(var i in  this.table_data) {
-                        if(this.table_data[i].is_new) {
+                    for (var i in  this.table_data) {
+                        if (this.table_data[i].is_new) {
                             this.$refs.selection.toggleSelect(i)
                         }
                     }
                 }
 
                 if (status === "diffnew") {
-                    for(var i in  this.table_data) {
-                        if(this.table_data[i].is_new || this.table_data[i].is_diff) {
+                    for (var i in  this.table_data) {
+                        if (this.table_data[i].is_new || this.table_data[i].is_diff) {
                             this.$refs.selection.toggleSelect(i)
                         }
                     }

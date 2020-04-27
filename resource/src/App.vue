@@ -1,7 +1,5 @@
 <template>
-  <div>
     <LayoutRoot ref="ch"></LayoutRoot>
-  </div>
 </template>
 <script type="text/javascript">
   import httpVueLoader from "http-vue-loader"
