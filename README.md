@@ -22,6 +22,8 @@ Go-sword(利刃)是一款基于Go语言的可视化web管理后台生成工具
 3. 页面基于Vue.js + iView 
 4. 针对每个数据表都生成了单独的逻辑文件，开发者可以求使用Vue或者iView来实现功能更加丰富的页面
 
+![1626ee1d3300ac6db6669d63721d96381587996351.jpg](https://github.com/sunshinev/remote_pics/raw/master/1626ee1d3300ac6db6669d63721d96381587996351.jpg)
+
 ## 开始
 
 #### 安装
