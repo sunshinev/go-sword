@@ -65,6 +65,8 @@ func (g *Generator) parseTable(c *config.DbSet, table string) {
 		g.ColumnDataTypes[name] = columnDT[name]["value"]
 	}
 
+	g.Columns = untils.ResortMySQLFields(&g.Columns)
+
 	struc, err := db2struct.Generate(*columnDataTypes, table, structName, table, true, true, false)
 	if err != nil {
 		panic(err.Error())
