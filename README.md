@@ -1,4 +1,4 @@
-# Go-sword
+# Go-sword 🗡️
 
 [【点我访问中文文档_cn_zh】](https://github.com/sunshinev/go-sword/blob/master/README_zh.md)
 
@@ -27,14 +27,14 @@ Just click the button to generate a complete management background
 
 ## Start
 
-#### Installation
+### Installation
 ```
 go get -u github.com/sunshinev/go-sword
 ```
 After the installation is complete, make sure that the `go-sword` command is in the` GOPATH/bin` directory, executable
 
 
-#### Start the service
+### Start the service
 ```
 go-sword -db {db_database} -password {db_password} -user {db_uesr} -module {module_name}
 ```
@@ -62,7 +62,7 @@ Please request: http://localhost: 8080
 ```
 
 
-##### Parameter Description
+#### Parameter Description
 ```
 + ------------------------------------------------- -+
 | |
@@ -93,13 +93,13 @@ Usage of go-sword:
       MySQL user
 ```
 
-##### Parameters: -module
+#### Parameters: -module
 The `-module` parameter is the name of the project to be created, and it is also the value of the` module` field in the `go.mod` file of the new project. Please make sure that this is consistent.
 
-##### Note
+#### Note
 The new project will directly create the `module` directory under the current directory where the` go-sword` command is run as the new project
 
-#### Start using the service
+### Start using the service
 
 ```
 Start successful, server is running ...
@@ -110,7 +110,7 @@ According to the prompt of service startup, directly click `http://localhost: 80
 
 ![59384a43cbc382dec53dd76d169a5d001587995174.jpg](https://github.com/sunshinev/remote_pics/raw/master/59384a43cbc382dec53dd76d169a5d001587995174.jpg)
 
-##### Important: Introduction to page functions
+#### Important: Introduction to page functions
 1. First, select the MySQL table by drop-down, and then click the `Preview` button to render the file to be created
 2. The first time you create a new project file you need to click `select all` to select all, the first time you create a core file that contains the necessary project start
 3. Click the `Generate` button, you can see the prompt file successfully created
@@ -121,7 +121,7 @@ note:
 2. If you create a second management page, you can just select the `select diff & new` button and click the` Generate` button
 3. Every time a new management interface is generated, please restart the newly created project
 
-### Start using a new project
+## Start using a new project
 Go to our newly created project directory
 ```
 ➜ test tree -L 2
@@ -141,7 +141,7 @@ For example, if we just run the `go-sword` command in the` test` directory, the 
 
 We enter the `test/go-sword-app` directory and start the project according to the following command
 
-#### Initialize new project go mod init
+### Initialize new project go mod init
 
 Use `go mod` to initialize the project, and the` module` here is the same as the project name we mentioned earlier! !
 
@@ -149,7 +149,7 @@ Use `go mod` to initialize the project, and the` module` here is the same as the
 go mod init {module}
 ```
 
-####Startup project
+###Startup project
 
 ```
 go run main.go
@@ -175,7 +175,7 @@ Start successful, server is running ...
 Please request: http://localhost: 8082
 ```
 
-#### Manage background effects
+### Manage background effects
 
 1. Back-end error notification
 2. Add, delete, edit, list, bulk delete, paging, search
