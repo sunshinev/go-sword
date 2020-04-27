@@ -27,7 +27,7 @@ type ResponseRetList struct {
 type Config struct {
 	Database *DbSet
 	// server port
-	ServerPort string
+	ServerPort int
 }
 
 type DbSet struct {
