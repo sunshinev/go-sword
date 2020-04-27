@@ -20,6 +20,9 @@ import 'highlight.js/styles/github.css'
 // Tell Vue.js to use vue-highlightjs
 Vue.use(VueHighlightJS)
 
+import CodeDiff from 'vue-code-diff'
+Vue.use(CodeDiff)
+
 import App from './App.vue'
 
 Vue.config.productionTip = false
@@ -30,7 +33,7 @@ const router = new VueRouter({
 
 new Vue({
 	router:router,
-	render: h => h(App),
+	render: h => h(App)
 }).$mount('#app')
 
 axios.interceptors.request.use(function(config) {
