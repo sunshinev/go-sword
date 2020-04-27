@@ -122,7 +122,10 @@
                 this.axios
                     .post('/api/<<table_name>>/list'+pageStr,JSON.stringify(search_list))
                     .then(response=>{
-                        console.info(response)
+                        if(response.data.code !== 200) {
+                            alert(response.data.msg)
+                            return
+                        }
                         this.main_data = response.data.data.list,
                             this.pageTotal = response.data.data.total,
                             this.pageSize = response.data.data.per_page
@@ -155,6 +158,10 @@
                 this.axios
                     .post('/api/<<table_name>>/delete',{id:this.deleteModalData.id})
                     .then(response=>{
+                        if(response.data.code !== 200) {
+                            alert(response.data.msg)
+                            return
+                        }
                         this.deleteModal = false
                         this.deleteModalData = {}
                         this.tableData()
@@ -175,6 +182,10 @@
                 this.axios
                     .post('/api/<<table_name>>/batch_delete',JSON.stringify({'ids':this.batchDeleteModalData}))
                     .then(response=>{
+                        if(response.data.code !== 200) {
+                            alert(response.data.msg)
+                            return
+                        }
                         this.batchDeleteModal = false
                         this.batchDeleteModalData = {}
                         this.tableData()

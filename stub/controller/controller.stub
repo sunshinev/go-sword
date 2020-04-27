@@ -18,7 +18,7 @@ func List(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
             if err := recover(); err != nil {
                 msg, _ := json.Marshal(response.Ret{
                     Code: http.StatusInternalServerError,
-                    Msg:  fmt.Sprintf("%s", err),
+                    Msg:  fmt.Sprintf("%v", err),
                 })
                 writer.Write(msg)
             }
@@ -53,7 +53,7 @@ func Delete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
             if err := recover(); err != nil {
                 msg, _ := json.Marshal(response.Ret{
                     Code: http.StatusInternalServerError,
-                    Msg:  fmt.Sprintf("%s", err),
+                    Msg:  fmt.Sprintf("%v", err),
                 })
                 writer.Write(msg)
             }
@@ -100,7 +100,7 @@ func Create(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
             if err := recover(); err != nil {
                 msg, _ := json.Marshal(response.Ret{
                     Code: http.StatusInternalServerError,
-                    Msg:  fmt.Sprintf("%s", err),
+                    Msg:  fmt.Sprintf("%v", err),
                 })
                 writer.Write(msg)
             }
@@ -142,7 +142,7 @@ func Edit(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
             if err := recover(); err != nil {
                 msg, _ := json.Marshal(response.Ret{
                     Code: http.StatusInternalServerError,
-                    Msg:  fmt.Sprintf("%s", err),
+                    Msg:  fmt.Sprintf("%v", err),
                 })
                 writer.Write(msg)
             }
@@ -188,7 +188,7 @@ func Detail(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
             if err := recover(); err != nil {
                 msg, _ := json.Marshal(response.Ret{
                     Code: http.StatusInternalServerError,
-                    Msg:  fmt.Sprintf("%s", err),
+                    Msg:  fmt.Sprintf("%v", err),
                 })
                 writer.Write(msg)
             }
@@ -235,7 +235,7 @@ func BatchDelete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Req
 			if err := recover(); err != nil {
 				msg, _ := json.Marshal(response.Ret{
 					Code: http.StatusInternalServerError,
-					Msg:  fmt.Sprintf("%s", err),
+					Msg:  fmt.Sprintf("%v", err),
 				})
 				writer.Write(msg)
 			}

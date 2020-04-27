@@ -35,6 +35,10 @@
                 this.axios
                     .post('/api/<<table_name>>/detail',{id:parseInt(this.routeId)})
                     .then(response=>{
+                        if(response.data.code !== 200) {
+                            alert(response.data.msg)
+                            return
+                        }
                         this.info = response.data.data
                     })
             },
