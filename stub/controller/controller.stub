@@ -229,6 +229,47 @@ func Detail(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 }
 
 func BatchDelete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
-    return func(writer http.ResponseWriter, request *http.Request) {
-    }
+	return func(writer http.ResponseWriter, request *http.Request) {
+
+		defer func() {
+			if err := recover(); err != nil {
+				msg, _ := json.Marshal(response.Ret{
+					Code: http.StatusInternalServerError,
+					Msg:  fmt.Sprintf("%s", err),
+				})
+				writer.Write(msg)
+			}
+		}()
+
+		body, err := ioutil.ReadAll(request.Body)
+		if err != nil {
+			log.Printf("%v", err)
+			return
+		}
+
+		data := []int{}
+		err = json.Unmarshal(body, &data)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		for id := range data{
+			db.Where(<<model_struct>>{ID:id}).Delete(<<model_struct>>{})
+		}
+
+		ret := response.Ret{
+			Code: http.StatusOK,
+			Msg:  "success",
+		}
+
+		d, err := json.Marshal(&ret)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		_, err = writer.Write(d)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
 }
