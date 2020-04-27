@@ -32,12 +32,12 @@ type Generator struct {
 }
 
 type FileInstance struct {
-	FileName    string `json:"file_name"`
-	FilePath    string `json:"file_path"`
-	FileContent string `json:"file_content"`
-	Diff        string `json:"diff"`
-	IsDiff      bool   `json:"is_diff"`
-	IsNew       bool   `json:"is_new"`
+	FileName       string `json:"file_name"`
+	FilePath       string `json:"file_path"`
+	FileContent    string `json:"file_content"`
+	FileOldContent string `json:"file_old_content"`
+	IsDiff         bool   `json:"is_diff"`
+	IsNew          bool   `json:"is_new"`
 }
 
 func (g *Generator) Init(c *config.Config) *Generator {
@@ -104,6 +104,10 @@ func (g *Generator) Preview(c *config.DbSet, table string) {
 	g.gHtmlCreateFile()
 	g.gHtmlDetailFile()
 	g.gHtmlEditFile()
+
+	for _, file := range g.FileList {
+		g.handleFile(file)
+	}
 
 }
 
@@ -431,6 +435,7 @@ func (g *Generator) createRouteContent(path string) string {
 }
 
 func (g *Generator) gMainFile() {
+
 	var file = &FileInstance{
 		FilePath:    filepath.Join(g.config.RootPath, "main.go"),
 		FileName:    "main.go",
@@ -456,6 +461,7 @@ func (g *Generator) createMainContent() string {
 }
 
 func (g *Generator) gCoreFile() {
+
 	var file = &FileInstance{
 		FilePath:    filepath.Join(g.config.RootPath, "core", "core.go"),
 		FileName:    "core.go",
@@ -584,4 +590,49 @@ func (g *Generator) gResourceRestore() {
 	if err != nil {
 		panic(err.Error())
 	}
+}
+
+func (g *Generator) readFile(path string) string {
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return ""
+		}
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return string(data)
+}
+
+func (g *Generator) contentDiff(oldContent *string, newContent *string) (isNew bool, isDiff bool) {
+	if *oldContent == *newContent {
+		isDiff = false
+	} else {
+		isDiff = true
+	}
+
+	if *oldContent == "" {
+		isNew = true
+	} else {
+		isNew = false
+	}
+
+	return
+}
+
+func (g *Generator) handleFile(file *FileInstance) {
+	oldContent := g.readFile(file.FilePath)
+	file.FileOldContent = oldContent
+	isNew, isDiff := g.contentDiff(&oldContent, &file.FileContent)
+	file.IsNew = isNew
+	file.IsDiff = isDiff
 }

@@ -1,5 +1,7 @@
 package untils
 
+import "sort"
+
 func IsContain(v interface{}, s []string) bool {
 	for _, value := range s {
 		if v == value {
@@ -37,6 +39,8 @@ func ConvertFieldsType2Js(mysqlType string) string {
 // so we will put `id` at the top,and `create_at`,`updated_at` at bottom
 func ResortMySQLFields(fields *[]string) []string {
 	newFields := []string{"id"}
+
+	sort.Strings(*fields)
 
 	for _, f := range *fields {
 		if f == "id" || f == "created_at" || f == "updated_at" {

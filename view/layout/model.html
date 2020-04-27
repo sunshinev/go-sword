@@ -29,7 +29,7 @@
                          @on-selection-change="table_selection_change">
                     <template slot-scope="{ row, index }" slot="table_button">
                         <i-button type="info" size="small" @click="openModal(index)">Detail</i-button>
-                        <template v-if="row.is_diff == 'y'">
+                        <template v-if="row.is_diff">
                             <i-button type="warning" size="small" @click="openDiffModal(index)">diff</i-button>
                         </template>
                     </template>
@@ -152,7 +152,7 @@
             },
             openDiffModal(index) {
                 this.file_new_content = this.table_data[index].file_content
-                this.file_old_content = ""
+                this.file_old_content = this.table_data[index].file_old_content
                 this.is_show_diff_model = true
                 this.diff_model_title = this.table_data[index].file_path
             },
