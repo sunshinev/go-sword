@@ -194,7 +194,7 @@ func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
 	ret, err := json.Marshal(Ret{
 		Code: http.StatusOK,
 		Data: List{
-			List: &g.FileList,
+			List: &g.GFileList,
 		},
 	})
 

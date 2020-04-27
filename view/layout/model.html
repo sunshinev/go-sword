@@ -30,9 +30,6 @@
                         </i-button>
                     </i-form-item>
                 </i-form>
-                <i-alert type="" show-icon>
-                    <span slot="desc"></span>
-                </i-alert>
             </i-col>
         </i-row>
         <i-row>
@@ -167,7 +164,10 @@
                     .post('/api/model/generate', {table_name: this.table_name, files: this.waitingfiles})
                     .then(response => {
                         if (response.data.code === 200) {
-                            console.info(response.data)
+                            let list = response.data.data.list
+                            for( var i in list) {
+                                this.$Message.success("Generate success:"+ list[i].file_path)
+                            }
                         } else {
                             alert(response.data.msg)
                         }

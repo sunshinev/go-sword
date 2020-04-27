@@ -29,6 +29,8 @@ type Generator struct {
 	// Files need to generate
 	FileList []*FileInstance
 	config   *config.Config
+	// Generate files list
+	GFileList []*FileInstance
 }
 
 type FileInstance struct {
@@ -120,6 +122,8 @@ func (g *Generator) Generate(c *config.DbSet, table string, files []string) {
 		if !untils.IsContain(path, files) {
 			continue
 		}
+		// Remember files need to generate
+		g.GFileList = append(g.GFileList, file)
 
 		_, err := os.Stat(path)
 		if err != nil {
