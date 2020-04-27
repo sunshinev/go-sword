@@ -7,7 +7,17 @@ import (
 
 func main() {
 
-	e := core.Engine{}
+	e := core.Engine{
+		Config: &core.Config{
+			Database: &core.DbSet{
+				Host:     "<<db_host>>",
+				User:     "<<db_user>>",
+				Password: "<<db_password>>",
+				Port:     <<db_port>>,
+				Database: "<<db_database>>",
+			},
+		},
+	}
 
 	err := e.Run()
 	if err != nil {

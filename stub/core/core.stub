@@ -21,22 +21,46 @@ type ResponseRetList struct {
 }
 
 
+type Config struct {
+	Database *DbSet
+	// server port
+	ServerPort string
+}
+
+type DbSet struct {
+	Host     string
+	User     string
+	Password string
+	Port     int
+	Database string
+}
+
 type Engine struct {
 	Db *gorm.DB
+	Config *Config
 }
 
 func (e *Engine) Load() (err error) {
 	// Open db
-	e.Db, err = gorm.Open("mysql", "root:123456@/goadmin?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		return
-	}
+	e.registerDb()
 
 	// Register route
 	route.Register(e.Db,e.Render)
 
 	return nil
 }
+
+func (e *Engine) registerDb() {
+	// "root:123456@/goadmin?charset=utf8&parseTime=True&loc=Local"
+	d := e.Config.Database
+	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@/%s?charset=utf8&parseTime=True&loc=Local",d.User,d.Password,d.Database))
+	if err != nil {
+		log.Fatal("%v",err)
+	}
+
+	e.Db = db
+}
+
 
 func (e *Engine) Run() (err error) {
 	err = e.Load()
