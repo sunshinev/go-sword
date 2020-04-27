@@ -8,7 +8,7 @@
             <i-row :style="{margin: '20px 0 '}" type="flex" justify="left">
                 <i-col :style="{padding:'10px 0',textAlign:'right'}" span='6' v-for="value in search_fields">
                     {{value}}：
-                    <i-input v-model="search_fields[value]" placeholder="" style="width: 200px"></i-input>
+                    <i-input v-model="info[value]" placeholder="" style="width: 200px"></i-input>
                 </i-col>
             </i-row>
             <i-row>
@@ -102,9 +102,13 @@
                     {title:'operate', slot:'detail_button', width: 250}
                 ],
                 routePage:this.page ?this.page : '',
+                info:{},
                 search_fields: [
                      <<js_data_search_fields>>
-                ]
+                ],
+                fields_type:{
+                    <<js_data_fields_type>>
+                }
             }
         },
         props: ['page'],
@@ -112,23 +116,20 @@
             tableData: function() {
                 var pageStr = this.routePage ? '?page='+this.routePage : '';
 
-                var search_list = {};
-                for(var i in this.search_fields) {
-                    if(this.search_fields[i]) {
-                        search_list[i] = this.search_fields[i]
-                    }
+                if(!this.verifyFieldType()) {
+                    return
                 }
 
                 this.axios
-                    .post('/api/<<table_name>>/list'+pageStr,JSON.stringify(search_list))
+                    .post('/api/<<table_name>>/list'+pageStr,this.info)
                     .then(response=>{
                         if(response.data.code !== 200) {
                             alert(response.data.msg)
                             return
                         }
                         this.main_data = response.data.data.list,
-                            this.pageTotal = response.data.data.total,
-                            this.pageSize = response.data.data.per_page
+                        this.pageTotal = response.data.data.pagination.total_nums,
+                        this.pageSize = response.data.data.pagination.page_size
                     })
             },
             invokeChangePage: function(page) {
@@ -180,7 +181,7 @@
             },
             invokeConfirmBatchDelete: function() {
                 this.axios
-                    .post('/api/<<table_name>>/batch_delete',JSON.stringify({'ids':this.batchDeleteModalData}))
+                    .post('/api/<<table_name>>/batch_delete',this.batchDeleteModalData)
                     .then(response=>{
                         if(response.data.code !== 200) {
                             alert(response.data.msg)
@@ -197,6 +198,20 @@
                 for (var i in rows) {
                     this.batchDeleteModalData.push(rows[i].id)
                 }
+            },
+            verifyFieldType: function () {
+                for(var name in this.info) {
+                    if(this.fields_type[name] === "number") {
+                        if(isNaN(this.info[name])) {
+                            alert(name+" is not a number")
+                            return false
+                        }
+                        this.info[name] = Number(this.info[name])
+                    }else if(this.fields_type[name] === "string") {
+                        this.info[name] = String(this.info[name])
+                    }
+                }
+                return true;
             }
         },
         created: function() {

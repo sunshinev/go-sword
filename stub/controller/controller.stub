@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"math"
+	"strconv"
 
 	"github.com/jinzhu/gorm"
 	"fmt"
@@ -14,25 +16,70 @@ import (
 
 func List(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
-	     defer func() {
-            if err := recover(); err != nil {
-                msg, _ := json.Marshal(response.Ret{
-                    Code: http.StatusInternalServerError,
-                    Msg:  fmt.Sprintf("%v", err),
-                })
-                writer.Write(msg)
-            }
-        }()
+		defer func() {
+			if err := recover(); err != nil {
+				msg, _ := json.Marshal(response.Ret{
+					Code: http.StatusInternalServerError,
+					Msg:  fmt.Sprintf("%v", err),
+				})
+				writer.Write(msg)
+			}
+		}()
 
-		sqls := []<<model_struct>>{}
-		db.Find(&sqls)
+		// Get page
+		err := request.ParseForm()
+		if err != nil {
+			panic(err.Error())
+		}
 
-        ret := response.Ret{
-            Code: http.StatusOK,
-            Data: response.List{
-                List: &sqls,
-            },
-        }
+		page := request.FormValue("page")
+		if page == "" {
+			page = "1"
+		}
+
+		pageInt, err := strconv.Atoi(page)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		// Get search_data
+		body, err := ioutil.ReadAll(request.Body)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		filters := &<<model_struct>>{}
+		err = json.Unmarshal(body, &filters)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		// Get total nums
+		totalNums := 0
+		pageSize := 2
+		table := []<<model_struct>>{}
+		db.Where(filters).Find(&table).Count(&totalNums)
+
+		// Compute total_pages
+		totalPages := math.Ceil(float64(totalNums) / float64(pageSize))
+
+		// Get records
+		records := []<<model_struct>>{}
+		//db.Where(filters).Find(&records)
+		db.Where(filters).Limit(pageSize).Offset((pageInt-1)*pageSize).Order("created_at desc").Find(&records)
+
+		ret := response.Ret{
+			Code: http.StatusOK,
+			Data: response.List{
+				List: &records,
+				Pagination: response.Pagination{
+					PageSize:    pageSize,
+					TotalNums:   totalNums,
+					TotalPages:  int(totalPages),
+					CurrentPage: pageInt,
+				},
+			},
+		}
 
 		d, err := json.Marshal(&ret)
 		if err != nil {
@@ -159,7 +206,7 @@ func Edit(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 			panic(err.Error())
 		}
 
-		updateData :=  model.GoadminMenu{}
+		updateData :=  <<model_struct>>{}
         db.First(&updateData, data.ID)
         updateData = data
         db.Save(&updateData)

@@ -220,10 +220,13 @@ func (g *Generator) createListHtml() string {
 	// replace
 	var columnList = ""
 	var searchFields = ""
+	var fieldsType = ""
 
 	for _, name := range g.Columns {
 		columnList = columnList + fmt.Sprintf("{title:'%s', key:'%s'},\n", name, name)
 		searchFields = searchFields + fmt.Sprintf("'%s',\n", name)
+
+		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, untils.ConvertFieldsType2Js(g.ColumnDataTypes[name]))
 	}
 
 	content := string(data)
@@ -231,6 +234,7 @@ func (g *Generator) createListHtml() string {
 	content = strings.ReplaceAll(content, "<<table_name>>", g.TableName)
 	content = strings.ReplaceAll(content, "<<js_data_column_list>>", columnList)
 	content = strings.ReplaceAll(content, "<<js_data_search_fields>>", searchFields)
+	content = strings.ReplaceAll(content, "<<js_data_fields_type>>", fieldsType)
 
 	return content
 }
