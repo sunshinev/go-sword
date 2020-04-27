@@ -16,6 +16,7 @@ func main() {
 				Port:     <<db_port>>,
 				Database: "<<db_database>>",
 			},
+            ServerPort: 8082,
 		},
 	}
 
