@@ -528,7 +528,7 @@ func (g *Generator) createDefaultHtml(path string) string {
 	}
 
 	// replace
-	var menu = fmt.Sprintf(`{icon: 'ios-people',title: '%s_list',name:'%s_list'},`, g.TableName, g.TableName)
+	var menu = fmt.Sprintf(`{icon: 'ios-people',title: '%s',name:'%s_list'},`, g.TableName, g.TableName)
 	var routeSets = []string{"list", "create", "detail", "edit"}
 	var route = ""
 
@@ -554,6 +554,7 @@ func (g *Generator) createDefaultHtml(path string) string {
 	}
 
 	content = strings.ReplaceAll(content, "<<default_route>>", defaultRoute)
+	content = strings.ReplaceAll(content, "<<title>>", g.config.RootPath)
 
 	return content
 }
