@@ -1,10 +1,27 @@
+<style>
+
+    .ivu-table .demo-table-info-cell-name {
+        background-color: #2db7f5;
+        color: #fff;
+    }
+
+    .ivu-table .demo-table-info-cell-age {
+        background-color: #ff6600;
+        color: #fff;
+    }
+
+    .ivu-table .demo-table-info-cell-address {
+        background-color: #187;
+        color: #fff;
+    }
+</style>
 <template>
     <div style="margin-top: 50px">
         <i-row>
             <i-col span="12">
                 <i-form :label-width="200" method="post">
                     <i-form-item label="MySQL table">
-                        <i-auto-complete :data="table_list" v-model="table_name"
+                        <i-auto-complete :data="table_list" v-model="table_name" @on-select="selectTable()"
                                          placeholder="Click here ..."></i-auto-complete>
                     </i-form-item>
                     <i-form-item>
@@ -21,6 +38,9 @@
         <i-row>
             <i-col span="20">
                 <div style="text-align: right">
+                    <i-button type="warning" @click="handleSelect('diff')">Select diff files</i-button>
+                    <i-button type="info" @click="handleSelect('new')">Select new files</i-button>
+                    <i-button type="success" @click="handleSelect('diffnew')">Select diff & new</i-button>
                     <i-button @click="handleSelectAll(true)">Select all</i-button>
                     <i-button @click="handleSelectAll(false)">Unselect all</i-button>
                 </div>
@@ -32,6 +52,9 @@
                         <template v-if="row.is_diff">
                             <i-button type="warning" size="small" @click="openDiffModal(index)">diff</i-button>
                         </template>
+                    </template>
+                    <template slot-scope="{ row, index }" slot="select">
+                        <Checkbox v-model="single">Checkbox</Checkbox>
                     </template>
                 </i-table>
             </i-col>
@@ -52,7 +75,7 @@
                 file_old_content: "",
                 file_new_content: "",
                 is_show_diff_model: false,
-                diff_model_title:"",
+                diff_model_title: "",
                 table_list: [],
                 table_name: '',
                 table_col: [
@@ -88,8 +111,6 @@
             getTableList: function () {
                 let that = this
 
-                this.is_disabled_generate_btn = true
-
                 this.axios
                     .post('/api/model/table_list')
                     .then(response => {
@@ -101,6 +122,13 @@
                     })
             },
             handleTableData: function (tableData) {
+                for (i in tableData) {
+                    if (tableData[i].is_new) {
+                        tableData[i]['cellClassName'] = {file_path: 'demo-table-info-cell-name'};
+                    } else if (tableData[i].is_diff) {
+                        tableData[i]['cellClassName'] = {file_path: 'demo-table-info-cell-age'};
+                    }
+                }
                 this.table_data = tableData
                 console.info(this.table_data)
             },
@@ -156,14 +184,46 @@
                 this.is_show_diff_model = true
                 this.diff_model_title = this.table_data[index].file_path
             },
+            handleSelect(status) {
+                this.handleSelectAll(false)
+
+                if (status === "diff") {
+                    for(var i in  this.table_data) {
+                        if(this.table_data[i].is_diff) {
+                            this.$refs.selection.toggleSelect(i)
+                        }
+                    }
+                }
+
+                if (status === "new") {
+                    for(var i in  this.table_data) {
+                        if(this.table_data[i].is_new) {
+                            this.$refs.selection.toggleSelect(i)
+                        }
+                    }
+                }
+
+                if (status === "diffnew") {
+                    for(var i in  this.table_data) {
+                        if(this.table_data[i].is_new || this.table_data[i].is_diff) {
+                            this.$refs.selection.toggleSelect(i)
+                        }
+                    }
+                }
+            },
             handleSelectAll(status) {
                 this.$refs.selection.selectAll(status);
+
             },
             table_selection_change(rows) {
                 this.waitingfiles = []
                 for (var i in rows) {
                     this.waitingfiles.push(rows[i].file_path);
                 }
+            },
+            selectTable() {
+                console.info(2)
+                this.is_disabled_generate_btn = true
             }
         },
         mounted: function () {

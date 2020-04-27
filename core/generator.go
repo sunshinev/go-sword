@@ -614,16 +614,21 @@ func (g *Generator) readFile(path string) string {
 }
 
 func (g *Generator) contentDiff(oldContent *string, newContent *string) (isNew bool, isDiff bool) {
-	if *oldContent == *newContent {
-		isDiff = false
-	} else {
-		isDiff = true
-	}
 
 	if *oldContent == "" {
 		isNew = true
 	} else {
 		isNew = false
+	}
+	if *oldContent == *newContent {
+		isDiff = false
+	} else {
+		// If the file is new, then do not show diff status
+		if isNew {
+			isDiff = false
+		} else {
+			isDiff = true
+		}
 	}
 
 	return
