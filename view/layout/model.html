@@ -78,6 +78,8 @@
             getTableList: function () {
                 let that = this
 
+                this.is_disabled_generate_btn = true
+
                 this.axios
                     .post('/api/model/table_list')
                     .then(response => {
