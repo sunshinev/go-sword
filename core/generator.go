@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/sunshinev/go-sword/core/untils"
@@ -460,6 +461,11 @@ func (g *Generator) createMainContent() string {
 
 	content := string(data)
 
+	content = strings.ReplaceAll(content, "<<db_host>>", g.config.Database.Host)
+	content = strings.ReplaceAll(content, "<<db_user>>", g.config.Database.User)
+	content = strings.ReplaceAll(content, "<<db_password>>", g.config.Database.Password)
+	content = strings.ReplaceAll(content, "<<db_port>>", strconv.Itoa(g.config.Database.Port))
+	content = strings.ReplaceAll(content, "<<db_database>>", g.config.Database.Database)
 	content = strings.ReplaceAll(content, "<<import_core>>", str)
 	return content
 }
