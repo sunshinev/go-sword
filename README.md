@@ -31,6 +31,13 @@ Just click the button to generate a complete management background
 ```
 go get -u github.com/sunshinev/go-sword
 ```
+### build
+
+```
+go build
+```
+
+
 After the installation is complete, make sure that the `go-sword` command is in the` GOPATH/bin` directory, executable
 
 

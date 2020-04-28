@@ -29,6 +29,12 @@ Go-sword(利刃)是一款基于Go语言的可视化web管理后台生成工具
 ```
 go get -u  github.com/sunshinev/go-sword
 ```
+### 编译
+
+```
+go build
+```
+
 安装完成后，确保`go-sword`命令在`GOPATH/bin`目录下，可执行
 
 
