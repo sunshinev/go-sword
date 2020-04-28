@@ -12,9 +12,9 @@ Go-sword is a visual web management background generation tool based on Go langu
 
 ## Demo
 
-http://go-sword.osinger.com/#/model
+http://go-sword.osinger.com/
 
-http://go-sword-app.osinger.com/#/articles/list
+http://go-sword-app.osinger.com/
 
 
 The goal is to quickly create a CRUD visual background
