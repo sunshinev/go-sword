@@ -56,7 +56,7 @@ func List(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 
 		// Get total nums
 		totalNums := 0
-		pageSize := 2
+		pageSize := 20
 		table := []<<model_struct>>{}
 		db.Where(filters).Find(&table).Count(&totalNums)
 
