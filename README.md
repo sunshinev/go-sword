@@ -10,6 +10,13 @@ Go-sword is a visual web management background generation tool based on Go langu
 ![GitHub stars](https://img.shields.io/github/stars/sunshinev/go-sword?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/sunshinev/go-sword?style=social)
 
+## Demo
+
+http://go-sword.osinger.com/#/model
+
+http://go-sword-app.osinger.com/#/articles/list
+
+
 The goal is to quickly create a CRUD visual background
 
 According to the table structure of MySQL, create a complete management background interface, developers no longer need to manually create CRUD-capable pages
@@ -25,11 +32,6 @@ Just click the button to generate a complete management background
 
 ![1626ee1d3300ac6db6669d63721d96381587996351.jpg](https://github.com/sunshinev/remote_pics/raw/master/1626ee1d3300ac6db6669d63721d96381587996351.jpg)
 
-## Demo
-
-http://go-sword.osinger.com/#/model
-
-http://go-sword-app.osinger.com/#/articles/list
 
 
 ## Start
