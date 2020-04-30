@@ -1,4 +1,4 @@
-![go-sword-logo.jpg](https://github.com/sunshinev/remote_pics/raw/master/go-sword-logo-v1.jpg)
+[![e5355b6316b83dcf4b6be9b7544f8e331588255151.jpg](https://github.com/sunshinev/remote_pics/raw/master/e5355b6316b83dcf4b6be9b7544f8e331588255151.jpg)](https://sunshinev.github.io/go-sword-home/)
 
 Go-sword is a visual web management background generation tool based on Go language
 
