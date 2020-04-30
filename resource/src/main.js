@@ -17,12 +17,10 @@ Vue.use(VueAxios, axios)
 import CodeDiff from 'vue-code-diff'
 Vue.use(CodeDiff)
 
-import VueHighlightJS from 'vue-highlightjs'
-import 'highlight.js/styles/atom-one-dark.css'
+// import VueHighlightJS from 'vue-highlightjs'
 
 // Tell Vue.js to use vue-highlightjs
-Vue.use(VueHighlightJS)
-
+// Vue.use(VueHighlightJS)
 
 
 import App from './App.vue'

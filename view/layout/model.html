@@ -57,7 +57,7 @@
             </i-col>
         </i-row>
         <i-modal v-model="is_show_detail_model" :title="detail_model_title" width="80">
-            <pre v-highlightjs="detail_model_content"><code></code></pre>
+            <pre style="color: white;padding: 20px;background: black"><code v-text="detail_model_content"></code></pre>
         </i-modal>
         <i-modal v-model="is_show_diff_model" :title="diff_model_title" width="80">
             <code-diff :old-string="file_old_content" :new-string="file_new_content" :context="10"/>

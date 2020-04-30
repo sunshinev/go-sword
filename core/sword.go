@@ -1,6 +1,7 @@
 package core
 
 import (
+	"compress/gzip"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -10,11 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sunshinev/go-sword/assets/view"
-
+	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/sunshinev/go-sword/assets/resource"
 
-	assetfs "github.com/elazarl/go-bindata-assetfs"
+	"github.com/sunshinev/go-sword/assets/view"
 
 	"github.com/sunshinev/go-sword/config"
 
@@ -34,6 +34,15 @@ type List struct {
 type GenerateParams struct {
 	TableName string   `json:"table_name"`
 	Files     []string `json:"files"`
+}
+
+type gZipWriter struct {
+	gz *gzip.Writer
+	http.ResponseWriter
+}
+
+func (u *gZipWriter) Write(p []byte) (int, error) {
+	return u.gz.Write(p)
 }
 
 // Engine
@@ -67,14 +76,37 @@ func (s *Sword) Run() {
 	http.HandleFunc("/api/model/preview", s.Preview)
 	http.HandleFunc("/api/model/generate", s.Generate)
 
-	// Static file route
-	fs := assetfs.AssetFS{
-		Asset:     resource.Asset,
-		AssetDir:  resource.AssetDir,
-		AssetInfo: resource.AssetInfo,
-		Prefix:    "resource/dist",
-	}
-	http.Handle("/", http.FileServer(&fs))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
+		//Static file route
+		fs := assetfs.AssetFS{
+			Asset:     resource.Asset,
+			AssetDir:  resource.AssetDir,
+			AssetInfo: resource.AssetInfo,
+			Prefix:    "resource/dist",
+		}
+
+		handle := http.FileServer(&fs)
+		w.Header().Set("Content-Encoding", "gzip")
+
+		gz := gzip.NewWriter(w)
+		newWriter := &gZipWriter{
+			gz:             gz,
+			ResponseWriter: w,
+		}
+
+		defer gz.Close()
+
+		handle.ServeHTTP(newWriter, r)
+	})
+
+	//fs := assetfs.AssetFS{
+	//	Asset:     resource.Asset,
+	//	AssetDir:  resource.AssetDir,
+	//	AssetInfo: resource.AssetInfo,
+	//	Prefix:    "resource/dist",
+	//}
+	//http.Handle("/", http.FileServer(&fs))
 
 	// Render vue component
 	http.HandleFunc("/render", s.Render)
