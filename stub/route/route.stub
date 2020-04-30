@@ -8,17 +8,42 @@ package route
 
 import (
 	"net/http"
+	"compress/gzip"
 
 	"github.com/jinzhu/gorm"
 	// ----Import----
 )
+
+type gZipWriter struct {
+	gz *gzip.Writer
+	http.ResponseWriter
+}
+
+func (u *gZipWriter) Write(p []byte) (int, error) {
+	return u.gz.Write(p)
+}
 
 func Register(db *gorm.DB,render func(writer http.ResponseWriter, request *http.Request)) {
 	// Static file
 	http.Handle("/go_sword_public/", http.StripPrefix("/go_sword_public/", http.FileServer(http.Dir("resource/dist"))))
 
 	// Default index.html
-	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("resource/dist"))))
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
+        //Static file route
+        handle := http.FileServer(http.Dir("resource/dist"))
+        w.Header().Set("Content-Encoding", "gzip")
+
+        gz := gzip.NewWriter(w)
+        newWriter := &gZipWriter{
+            gz:             gz,
+            ResponseWriter: w,
+        }
+
+        defer gz.Close()
+
+        handle.ServeHTTP(newWriter, r)
+    })
 
 	// Render Vue html component
 	http.HandleFunc("/render", render)
