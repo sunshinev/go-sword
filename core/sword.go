@@ -100,14 +100,6 @@ func (s *Sword) Run() {
 		handle.ServeHTTP(newWriter, r)
 	})
 
-	//fs := assetfs.AssetFS{
-	//	Asset:     resource.Asset,
-	//	AssetDir:  resource.AssetDir,
-	//	AssetInfo: resource.AssetInfo,
-	//	Prefix:    "resource/dist",
-	//}
-	//http.Handle("/", http.FileServer(&fs))
-
 	// Render vue component
 	http.HandleFunc("/render", s.Render)
 
