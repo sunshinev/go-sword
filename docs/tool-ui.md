@@ -1,19 +1,12 @@
 
-1. 后端报错提醒
-2. 增加、删除、编辑、列表、批量删除、分页、检索
+![59384a43cbc382dec53dd76d169a5d001587995174.jpg](https://cdn.jsdelivr.net/gh/sunshinev/remote_pics/59384a43cbc382dec53dd76d169a5d001587995174.jpg)
 
-![1626ee1d3300ac6db6669d63721d96381587996351.jpg](https://cdn.jsdelivr.net/gh/sunshinev/remote_pics/1626ee1d3300ac6db6669d63721d96381587996351.jpg)
+### 功能介绍
 
-## 页面功能展示
+1. 首先下拉选择MySQL 的表格，然后点击`Preview`按钮，即可渲染出需要创建的文件
+2. 首次创建新项目文件需要点击`select all`全部选择，首次创建包含了项目启动必需的核心文件
+3. 点击`Generate`按钮，既可以看到提示文件创建成功
+4. 到目前为止，我们的后台已经创建成功了
 
-### 列表
-![ea1f86ebc1b5c88aaf6484fa078584951587997286.jpg](https://cdn.jsdelivr.net/gh/sunshinev/remote_pics/ea1f86ebc1b5c88aaf6484fa078584951587997286.jpg)
+注意： 1. 首次创建，文件需要全部选择 2. 如果创建第二个管理页面，那么可以只选择 `select diff & new`按钮，然后点击`Generate`按钮 3. 每次生成新的管理界面后，请重启新创建的项目
 
-### 删除
-![70279af696d9a230001f821cdf3a1ac21587997368.jpg](https://cdn.jsdelivr.net/gh/sunshinev/remote_pics/70279af696d9a230001f821cdf3a1ac21587997368.jpg)
-
-### 预览
-![2d1871a645acc3d3544ad7f77a0d6fca1587997398.jpg](https://cdn.jsdelivr.net/gh/sunshinev/remote_pics/2d1871a645acc3d3544ad7f77a0d6fca1587997398.jpg)
-
-### 编辑
-![a9255db26b2af0365655840f6afd27851587997440.jpg](https://cdn.jsdelivr.net/gh/sunshinev/remote_pics/a9255db26b2af0365655840f6afd27851587997440.jpg)
