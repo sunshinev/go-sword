@@ -1,27 +1,32 @@
-### 安装
-```
+# 快速开始
+
+## 安装
+
+```text
 go get -u  github.com/sunshinev/go-sword
 ```
-### 编译
 
-```
+## 编译
+
+```text
 go build
 ```
 
 安装完成后，确保`go-sword`命令在`GOPATH/bin`目录下，可执行
 
+## 启动服务
 
-### 启动服务
-```
+```text
 go-sword -db {db_database} -password {db_password} -user {db_uesr} -module {module_name}
 ```
 
-例如：`go-sword -db blog -password 123456 -user root -module  go-sword-app`
+例如：`go-sword -db blog -password 123456 -user root -module go-sword-app`
 
 以上命令，就是连接数据库`blog`，用户名`root`,密码`12345`,在go-sword命令的当前目录下创建项目`go-sword-app`
 
 启动成功的提示
-```
+
+```text
 Go-Sword will create new project named go-sword-app in current directory
 
 [Server info]
@@ -38,9 +43,9 @@ Start successful, server is running ...
 Please request: http://localhost:8080
 ```
 
+### 参数说明
 
-#### 参数说明
-```
+```text
 +---------------------------------------------------+
 |                                                   |
 |            Welcome to use Go-Sword                |
@@ -70,16 +75,17 @@ Usage of go-sword:
       MySQL user
 ```
 
-#### 参数：  -module
+### 参数：  -module
+
 `-module` 参数是代表要创建的项目名称，同时也是新项目`go.mod`文件中的`module`字段的值，这点请务必保持一致。
 
-#### 注意
+### 注意
+
 新项目会在运行`go-sword`命令的当前目录下，直接创建`module`目录，作为新项目
 
+## 开始使用服务
 
-### 开始使用服务
-
-```
+```text
 Start successful, server is running ...
 Please request: http://localhost:8080
 ```
@@ -88,14 +94,12 @@ Please request: http://localhost:8080
 
 ![59384a43cbc382dec53dd76d169a5d001587995174.jpg](https://github.com/sunshinev/remote_pics/raw/master/59384a43cbc382dec53dd76d169a5d001587995174.jpg)
 
-#### 重要：页面功能介绍
+### 重要：页面功能介绍
+
 1. 首先下拉选择MySQL 的表格，然后点击`Preview`按钮，即可渲染出需要创建的文件
 2. 首次创建新项目文件需要点击`select all`全部选择，首次创建包含了项目启动必需的核心文件
 3. 点击`Generate`按钮，既可以看到提示文件创建成功
 4. 到目前为止，我们的后台已经创建成功了
 
-注意：
-1. 首次创建，文件需要全部选择
-2. 如果创建第二个管理页面，那么可以只选择 `select diff & new`按钮，然后点击`Generate`按钮
-3. 每次生成新的管理界面后，请重启新创建的项目
+注意： 1. 首次创建，文件需要全部选择 2. 如果创建第二个管理页面，那么可以只选择 `select diff & new`按钮，然后点击`Generate`按钮 3. 每次生成新的管理界面后，请重启新创建的项目
 

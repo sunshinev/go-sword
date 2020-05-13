@@ -1,16 +1,12 @@
-[![e5355b6316b83dcf4b6be9b7544f8e331588255151.jpg](https://github.com/sunshinev/remote_pics/raw/master/e5355b6316b83dcf4b6be9b7544f8e331588255151.jpg)](https://sunshinev.github.io/go-sword-home/)
+# Introduction
 
-Go-sword(利刃)是一款基于Go语言的可视化web管理后台生成工具
+![e5355b6316b83dcf4b6be9b7544f8e331588255151.jpg](https://github.com/sunshinev/remote_pics/raw/master/e5355b6316b83dcf4b6be9b7544f8e331588255151.jpg)
 
+Go-sword\(利刃\)是一款基于Go语言的可视化web管理后台生成工具
 
-![GitHub last commit](https://img.shields.io/github/last-commit/sunshinev/go-sword)
-![GitHub](https://img.shields.io/github/license/sunshinev/go-sword)
-![GitHub repo size](https://img.shields.io/github/repo-size/sunshinev/go-sword)
-![GitHub stars](https://img.shields.io/github/stars/sunshinev/go-sword?style=social)
-![GitHub forks](https://img.shields.io/github/forks/sunshinev/go-sword?style=social)
+![GitHub last commit](https://img.shields.io/github/last-commit/sunshinev/go-sword) ![GitHub](https://img.shields.io/github/license/sunshinev/go-sword) ![GitHub repo size](https://img.shields.io/github/repo-size/sunshinev/go-sword) ![GitHub stars](https://img.shields.io/github/stars/sunshinev/go-sword?style=social) ![GitHub forks](https://img.shields.io/github/forks/sunshinev/go-sword?style=social)
 
-官方网站
-[https://sunshinev.github.io/go-sword-home/](https://sunshinev.github.io/go-sword-home/)
+官方网站 [https://sunshinev.github.io/go-sword-home/](https://sunshinev.github.io/go-sword-home/)
 
 她能满足你哪些？
 
@@ -23,13 +19,12 @@ Go-sword(利刃)是一款基于Go语言的可视化web管理后台生成工具
 
 那么 go-sword 可以满足你
 
-
-根据MySQL的表结构，创建完整的管理后台界面，开发者无需再重复手动的创建具有CRUD能力的页面
-只需要点击按钮即可生成完整的管理后台
+根据MySQL的表结构，创建完整的管理后台界面，开发者无需再重复手动的创建具有CRUD能力的页面 只需要点击按钮即可生成完整的管理后台
 
 ![136e8b44d5d4acf00d5a63125928bd731587996269.jpg](https://github.com/sunshinev/remote_pics/raw/master/136e8b44d5d4acf00d5a63125928bd731587996269.jpg)
 
 ## 特点
+
 1. 一键生成，无需写一行代码
 2. 支持增加、删除、编辑、列表、批量删除、分页、检索
 3. 页面基于Vue.js + iView 
