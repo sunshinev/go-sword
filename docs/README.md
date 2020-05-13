@@ -1,14 +1,15 @@
 # 介绍
 
-官方网站:
+Go-sword\(利刃\)是一款基于Go语言的可视化web管理后台生成工具，根据MySQL的表结构，创建完整的管理后台界面，开发者无需再重复手动的创建具有CRUD能力的页面 只需要点击按钮即可生成完整的管理后台
+
+## 官方网站
 [https://sunshinev.github.io/go-sword-home/](https://sunshinev.github.io/go-sword-home/)
 
 ![7d741c0194c3f1649e441fb00e1e6db01589354523.jpg](https://cdn.jsdelivr.net/gh/sunshinev/remote_pics/7d741c0194c3f1649e441fb00e1e6db01589354523.jpg)
 
 
-Go-sword\(利刃\)是一款基于Go语言的可视化web管理后台生成工具，根据MySQL的表结构，创建完整的管理后台界面，开发者无需再重复手动的创建具有CRUD能力的页面 只需要点击按钮即可生成完整的管理后台
 
-Github:
+## Github
 [https://github.com/sunshinev/go-sword](https://github.com/sunshinev/go-sword)
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/sunshinev/go-sword) ![GitHub](https://img.shields.io/github/license/sunshinev/go-sword) ![GitHub repo size](https://img.shields.io/github/repo-size/sunshinev/go-sword) ![GitHub stars](https://img.shields.io/github/stars/sunshinev/go-sword?style=social) ![GitHub forks](https://img.shields.io/github/forks/sunshinev/go-sword?style=social)
