@@ -57,7 +57,7 @@ func (e *Engine) Load() (err error) {
 func (e *Engine) registerDb() {
 	// "root:123456@/goadmin?charset=utf8&parseTime=True&loc=Local"
 	d := e.Config.Database
-	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@/%s?charset=utf8&parseTime=True&loc=Local",d.User,d.Password,d.Database))
+	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", d.User, d.Password, d.Host, d.Port, d.Database))
 	if err != nil {
 		log.Fatal("%v",err)
 	}
