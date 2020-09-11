@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sunshinev/go-sword/core"
+	"github.com/sunshinev/go-sword/config"
 )
 
 type Db2struct struct {
@@ -19,8 +19,8 @@ type RowItem struct {
 	ColumnComment string
 }
 
-func (ds Db2struct) Convert(s *core.Sword, table string) (*[]RowItem, error) {
-	rows, err := s.Db.Query("SELECT COLUMN_NAME, COLUMN_KEY, DATA_TYPE, IS_NULLABLE,COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND table_name = ?", s.Config.Database, table)
+func (ds Db2struct) Convert(table string) (*[]RowItem, error) {
+	rows, err := config.GlobalConfig.DbConn.Query("SELECT COLUMN_NAME, COLUMN_KEY, DATA_TYPE, IS_NULLABLE,COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND table_name = ?", config.GlobalConfig.DatabaseSet.Database, table)
 	if err != nil {
 		return nil, err
 	}
@@ -54,25 +54,32 @@ func (ds Db2struct) Convert(s *core.Sword, table string) (*[]RowItem, error) {
 
 // 得到整体的结构体文件
 func (s Db2struct) FetchWholeStructFile(packageName, structName, tableName string, columns *[]RowItem) string {
-	return fmt.Sprintf("%s %s %s", s.genPackage(packageName), s.GenerateStruct(structName, columns), s.genTableNameFunc(structName, tableName))
+	structBody := s.GenerateStruct(structName, columns)
+	importStr := ""
+	if strings.Contains(structBody, "time.Time") {
+		importStr = "import \"time\""
+	}
+	return fmt.Sprintf("%s\n\n%s\n%s\n\n%s", s.genPackage(packageName), importStr, structBody, s.genTableNameFunc(structName, tableName))
 }
 
 func (s Db2struct) GenerateStruct(structName string, columns *[]RowItem) string {
 	itemList := []string{}
 	for _, row := range *columns {
-		rowStr := fmt.Sprintf("\t%s %s %s", s.mappingType(row.DataType), s.mappingGormTag(&row))
+		rowStr := fmt.Sprintf("\t%s %s `%s %s`", strings.Replace(strings.Title(strings.Replace(row.ColumnName, "_", " ", -1)), " ", "", -1), s.mappingType(row.DataType), s.mappingGormTag(&row), s.mappingJsonTag(&row))
 		itemList = append(itemList, rowStr)
 	}
 
-	st := fmt.Sprintf("type %s {\n%s\n", structName, strings.Join(itemList, "\n"))
+	st := fmt.Sprintf("type %s struct {\n%s\n}", structName, strings.Join(itemList, "\n"))
 	return st
 }
 
 // Mysql 类型映射到 Go
 func (s Db2struct) mappingType(fieldType string) string {
 	switch fieldType {
-	case "char", "varchar", "tinytext", "text", "blob", "mediumtext", "mediumblob", "longblob", "longtext", "enum", "date", "datetime", "timestamp", "time", "year", "json":
+	case "char", "varchar", "tinytext", "text", "blob", "mediumtext", "mediumblob", "longblob", "longtext", "enum", "json":
 		return "string"
+	case "date", "datetime", "timestamp", "time", "year":
+		return "time.Time"
 	case "tinyint", "smallint", "mediumint", "int", "bigint":
 		return "int32"
 	case "float", "double", "decimal":
@@ -82,6 +89,10 @@ func (s Db2struct) mappingType(fieldType string) string {
 	}
 }
 
+func (s Db2struct) mappingJsonTag(row *RowItem) string {
+	return fmt.Sprintf("json:\"%s\"", row.ColumnName)
+}
+
 func (s Db2struct) mappingGormTag(row *RowItem) string {
 	isNullable := ""
 	if row.IsNullable == "YES" {
@@ -89,21 +100,26 @@ func (s Db2struct) mappingGormTag(row *RowItem) string {
 	}
 	isPk := ""
 	if row.ColumnKey == "PRI" {
-		isPk = "pk"
+		isPk = "primaryKey"
 	}
-	return fmt.Sprintf("gorm: %s", strings.Join([]string{
-		"'" + row.ColumnName + "'",
-		isNullable,
-		isPk,
-	}, ","))
+
+	tags := []string{"Column:" + row.ColumnName, isNullable, isPk}
+	newTags := []string{}
+	for _, v := range tags {
+		if v != "" {
+			newTags = append(newTags, v)
+		}
+	}
+
+	return fmt.Sprintf("gorm:\"%s\"", strings.Join(newTags, ";"))
 }
 
 func (s Db2struct) genTableNameFunc(structName, tableName string) string {
-	return `func(` + strings.ToLower(structName) + ` *` + structName + `)TableName(){
+	return `func(` + strings.ToLower(structName) + ` *` + structName + `)TableName() string {
 	return "` + tableName + `"
 }`
 }
 
 func (s Db2struct) genPackage(packageName string) string {
-	return fmt.Sprintf("package %s \n\n", packageName)
+	return fmt.Sprintf("package %s", packageName)
 }

@@ -2,7 +2,6 @@ package core
 
 import (
 	"compress/gzip"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -11,30 +10,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sunshinev/go-sword/config"
+
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/sunshinev/go-sword/assets/resource"
 
 	"github.com/sunshinev/go-sword/assets/view"
 
-	"github.com/sunshinev/go-sword/config"
-
 	_ "github.com/go-sql-driver/mysql"
 )
-
-type Ret struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data"`
-}
-
-type List struct {
-	List interface{} `json:"list"`
-}
-
-type GenerateParams struct {
-	TableName string   `json:"table_name"`
-	Files     []string `json:"files"`
-}
 
 type gZipWriter struct {
 	gz *gzip.Writer
@@ -46,30 +30,16 @@ func (u *gZipWriter) Write(p []byte) (int, error) {
 }
 
 type Sword struct {
-	Config *config.Config
-	Db     *sql.DB
 }
 
-// Default Sword
-func Default() *Sword {
-	return &Sword{
-		Config: &config.Config{},
-	}
-}
+func Init() *Sword {
+	// 初始化配置
+	config.Config{}.InitConfig()
 
-// Set Config like Database
-func (s *Sword) SetConfig(cfg *config.Config) {
-	s.Config = cfg
+	return &Sword{}
 }
 
 func (s *Sword) Run() {
-
-	// Check MySQL connection
-	err := s.connDb()
-	if err != nil {
-		log.Fatalf("%v", err)
-	}
-
 	// Default Route
 	http.HandleFunc("/api/model/table_list", s.tableList)
 	http.HandleFunc("/api/model/preview", s.Preview)
@@ -105,29 +75,20 @@ func (s *Sword) Run() {
 	s.Welcome()
 
 	// Start server
-	err = http.ListenAndServe(":"+s.Config.ServerPort, nil)
+	err := http.ListenAndServe(":"+config.GlobalConfig.ServerPort, nil)
 	if err != nil {
 		log.Fatalf("Go-sword start err: %v", err)
 	}
 }
 
-// Check MySQL database connection
-func (s *Sword) connDb() (err error) {
-	c := s.Config.Database
-	// user:password@(localhost)/dbname?charset=utf8&parseTime=True&loc=Local
-	db, err := sql.Open("mysql", c.User+":"+c.Password+"@tcp("+c.Host+":"+strconv.Itoa(c.Port)+")/"+c.Database+"?&parseTime=True")
-	if err != nil {
-		return
-	}
-
-	s.Db = db
-
-	return nil
+type GenerateParams struct {
+	TableName string   `json:"table_name"`
+	Files     []string `json:"files"`
 }
 
 // Get database table list
 func (s *Sword) tableList(w http.ResponseWriter, r *http.Request) {
-	rows, err := s.Db.Query("SHOW TABLES")
+	rows, err := config.GlobalConfig.DbConn.Query("SHOW TABLES")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -169,9 +130,8 @@ func (s *Sword) Preview(w http.ResponseWriter, r *http.Request) {
 		panic("tableName is empty")
 	}
 
-	g := Generator{}
-	g.Init(s.Config)
-	g.Preview(s, data["table_name"])
+	g := Generator{}.Init()
+	g.Preview(data["table_name"])
 
 	ret, err := json.Marshal(Ret{
 		Code: http.StatusOK,
@@ -182,7 +142,6 @@ func (s *Sword) Preview(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err.Error())
 	}
-
 	_, err = w.Write(ret)
 	if err != nil {
 		panic(err.Error())
@@ -210,8 +169,7 @@ func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
 		panic("Files is empty")
 	}
 
-	g := Generator{}
-	g.Init(s.Config)
+	g := Generator{}.Init()
 	g.Generate(s, data.TableName, data.Files)
 
 	ret, err := json.Marshal(Ret{
@@ -242,7 +200,6 @@ func (s *Sword) Render(writer http.ResponseWriter, request *http.Request) {
 
 	path := request.FormValue("path")
 
-	//log.Println("%v", path)
 	if path == "" {
 		panic("lose path param")
 	}
@@ -268,20 +225,20 @@ func (s *Sword) readFile(path string) []byte {
 }
 
 func (s *Sword) Welcome() {
-	str := "Go-Sword will create new project named " + s.Config.RootPath + " in current directory" +
+	c := config.GlobalConfig
+	str := "Go-Sword will create new project named " + c.RootPath + " in current directory" +
 		"\n\n[Server info]" +
-		"\nServer port : " + s.Config.ServerPort +
-		"\nProject module : " + s.Config.RootPath +
+		"\nServer port : " + c.ServerPort +
+		"\nProject module : " + c.RootPath +
 		"\n\n[db info]" +
-		"\nMySQL host : " + s.Config.Database.Host +
-		"\nMySQL port : " + strconv.Itoa(s.Config.Database.Port) +
-		"\nMySQL user : " + s.Config.Database.User +
-		"\nMySQL password : " + s.Config.Database.Password +
+		"\nMySQL host : " + c.DatabaseSet.Host +
+		"\nMySQL port : " + strconv.Itoa(c.DatabaseSet.Port) +
+		"\nMySQL user : " + c.DatabaseSet.User +
+		"\nMySQL password : " + c.DatabaseSet.Password +
 		"\n\nStart successful, server is running ...\n" +
 		"Please request: " +
-		strings.Join([]string{"http://localhost:", s.Config.ServerPort}, "") +
+		strings.Join([]string{"http://localhost:", c.ServerPort}, "") +
 		"\n"
 
 	fmt.Println(str)
-
 }

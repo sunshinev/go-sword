@@ -112,14 +112,14 @@ func Delete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request)
 			return
 		}
 
-		data := make(map[string]int)
+		data := make(map[string]int32)
 		err = json.Unmarshal(body, &data)
 		if err != nil {
 			panic(err.Error())
 		}
 
 		sql := <<model_struct>>{
-			ID: data["id"],
+			Id: data["id"],
 		}
 
 		db.Delete(&sql)
@@ -207,7 +207,7 @@ func Edit(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
 		}
 
 		updateData :=  <<model_struct>>{}
-        db.First(&updateData, data.ID)
+        db.First(&updateData, data.Id)
         updateData = data
         db.Save(&updateData)
 
@@ -294,14 +294,14 @@ func BatchDelete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Req
 			return
 		}
 
-		data := []int{}
+		data := []int32{}
 		err = json.Unmarshal(body, &data)
 		if err != nil {
 			panic(err.Error())
 		}
 
-		for id := range data{
-			db.Where(<<model_struct>>{ID:id}).Delete(<<model_struct>>{})
+		for _,id := range data{
+			db.Where(<<model_struct>>{Id:id}).Delete(<<model_struct>>{})
 		}
 
 		ret := response.Ret{

@@ -8,15 +8,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sunshinev/go-sword/core/utils"
-
-	"github.com/sunshinev/go-sword/assets/resource"
-
-	"github.com/sunshinev/go-sword/assets/stub"
-
-	"github.com/sunshinev/go-sword/config"
-
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/sunshinev/go-sword/assets/resource"
+	"github.com/sunshinev/go-sword/assets/stub"
+	"github.com/sunshinev/go-sword/config"
+	"github.com/sunshinev/go-sword/core/utils"
 )
 
 type Generator struct {
@@ -42,61 +38,51 @@ type FileInstance struct {
 	IsNew          bool   `json:"is_new"`
 }
 
-func (g *Generator) Init(c *config.Config) *Generator {
-	g.config = c
-	g.ColumnDataTypes = make(map[string]string)
-	return g
+func (g Generator) Init() *Generator {
+	return &Generator{
+		config:          config.GlobalConfig,
+		ColumnDataTypes: map[string]string{},
+	}
 }
 
 // Entry
-func (g *Generator) parseTable(s *Sword, table string) {
+func (g *Generator) parseTable(table string) {
 
-	columnDataTypes, err := utils.Db2struct{}.Convert(s, table)
+	columnDataTypes, err := utils.Db2struct{}.Convert(table)
 	if err != nil {
 		panic(err.Error())
 	}
-
-	structName := strings.Replace(strings.Title(strings.Replace("hi_ni_hao", "_", " ", -1)), " ", "", -1)
 
 	// Set columns
 	for _, r := range *columnDataTypes {
 		g.Columns = append(g.Columns, r.ColumnName)
 		g.ColumnDataTypes[r.ColumnName] = r.DataType
 	}
-
 	g.Columns = utils.ResortMySQLFields(&g.Columns)
-
-	struc := utils.Db2struct{}.FetchWholeStructFile(table, structName, table, columnDataTypes)
-
 	// Set TableName
 	g.TableName = table
 	// Set PackageName
 	g.PackageName = table
 	// Set StructName
+	structName := strings.Replace(strings.Title(strings.Replace(table, "_", " ", -1)), " ", "", -1)
 	g.StructName = structName
 	// Set Content
-	g.Struc = struc
+	g.Struc = utils.Db2struct{}.FetchWholeStructFile("model", structName, table, columnDataTypes)
 }
 
-func (g *Generator) Preview(s *Sword, table string) {
-	g.parseTable(s, table)
-	// Main.go
-	g.gMainFile()
-	// Core.go
-	g.gCoreFile()
-	// Route.go
-	g.gRouteFile()
-	// Model
-	g.gModelFile()
-	// Controller
-	g.gControllerFile()
-	// Response
-	g.gResponseFile()
-	// Html
-	// default.html
-	g.gHtmlDefaultFile()
-	// list.html
-	g.gHtmlListFile()
+func (g *Generator) Preview(table string) {
+	g.parseTable(table)
+
+	g.gGoModFile()      // go.mod
+	g.gMainFile()       // Main.go
+	g.gCoreFile()       // Core.go
+	g.gRouteFile()      // Route.go
+	g.gModelFile()      // Model
+	g.gControllerFile() // Controller
+	g.gResponseFile()   // Response
+
+	g.gHtmlDefaultFile() // default.html
+	g.gHtmlListFile()    // list.htm
 	g.gHtmlCreateFile()
 	g.gHtmlDetailFile()
 	g.gHtmlEditFile()
@@ -108,7 +94,7 @@ func (g *Generator) Preview(s *Sword, table string) {
 }
 
 func (g *Generator) Generate(s *Sword, table string, files []string) {
-	g.Preview(s, table)
+	g.Preview(table)
 
 	for _, file := range g.FileList {
 		var path = file.FilePath
@@ -432,8 +418,17 @@ func (g *Generator) createRouteContent(path string) string {
 	return content
 }
 
-func (g *Generator) gMainFile() {
+func (g *Generator) gGoModFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(g.config.RootPath, "go.mod"),
+		FileName:    "go.mod",
+		FileContent: g.createGoModContent(),
+	}
 
+	g.FileList = append(g.FileList, file)
+}
+
+func (g *Generator) gMainFile() {
 	var file = &FileInstance{
 		FilePath:    filepath.Join(g.config.RootPath, "main.go"),
 		FileName:    "main.go",
@@ -441,6 +436,17 @@ func (g *Generator) gMainFile() {
 	}
 
 	g.FileList = append(g.FileList, file)
+}
+
+func (g *Generator) createGoModContent() string {
+	// Read stub
+	data, err := stub.Asset("stub/go.mod.stub")
+	if err != nil {
+		panic(err.Error())
+	}
+	content := string(data)
+	content = strings.ReplaceAll(content, "<<module_name>>", g.config.RootPath)
+	return content
 }
 
 func (g *Generator) createMainContent() string {
@@ -454,11 +460,11 @@ func (g *Generator) createMainContent() string {
 
 	content := string(data)
 
-	content = strings.ReplaceAll(content, "<<db_host>>", g.config.Database.Host)
-	content = strings.ReplaceAll(content, "<<db_user>>", g.config.Database.User)
-	content = strings.ReplaceAll(content, "<<db_password>>", g.config.Database.Password)
-	content = strings.ReplaceAll(content, "<<db_port>>", strconv.Itoa(g.config.Database.Port))
-	content = strings.ReplaceAll(content, "<<db_database>>", g.config.Database.Database)
+	content = strings.ReplaceAll(content, "<<db_host>>", g.config.DatabaseSet.Host)
+	content = strings.ReplaceAll(content, "<<db_user>>", g.config.DatabaseSet.User)
+	content = strings.ReplaceAll(content, "<<db_password>>", g.config.DatabaseSet.Password)
+	content = strings.ReplaceAll(content, "<<db_port>>", strconv.Itoa(g.config.DatabaseSet.Port))
+	content = strings.ReplaceAll(content, "<<db_database>>", g.config.DatabaseSet.Database)
 	content = strings.ReplaceAll(content, "<<import_core>>", str)
 	return content
 }
