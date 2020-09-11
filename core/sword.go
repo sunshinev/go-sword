@@ -45,13 +45,12 @@ func (u *gZipWriter) Write(p []byte) (int, error) {
 	return u.gz.Write(p)
 }
 
-// Engine
 type Sword struct {
 	Config *config.Config
 	Db     *sql.DB
 }
 
-// Create Sword
+// Default Sword
 func Default() *Sword {
 	return &Sword{
 		Config: &config.Config{},
@@ -172,7 +171,7 @@ func (s *Sword) Preview(w http.ResponseWriter, r *http.Request) {
 
 	g := Generator{}
 	g.Init(s.Config)
-	g.Preview(s.Config.Database, data["table_name"])
+	g.Preview(s, data["table_name"])
 
 	ret, err := json.Marshal(Ret{
 		Code: http.StatusOK,
@@ -213,7 +212,7 @@ func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
 
 	g := Generator{}
 	g.Init(s.Config)
-	g.Generate(s.Config.Database, data.TableName, data.Files)
+	g.Generate(s, data.TableName, data.Files)
 
 	ret, err := json.Marshal(Ret{
 		Code: http.StatusOK,

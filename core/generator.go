@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sunshinev/go-sword/core/untils"
+	"github.com/sunshinev/go-sword/core/utils"
 
 	"github.com/sunshinev/go-sword/assets/resource"
 
@@ -17,13 +17,12 @@ import (
 	"github.com/sunshinev/go-sword/config"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/sunshinev/db2struct"
 )
 
 type Generator struct {
 	Columns         []string
 	ColumnDataTypes map[string]string
-	Struc           []byte
+	Struc           string
 	PackageName     string
 	StructName      string
 	TableName       string
@@ -50,30 +49,24 @@ func (g *Generator) Init(c *config.Config) *Generator {
 }
 
 // Entry
-func (g *Generator) parseTable(c *config.DbSet, table string) {
-	// Use db2struct (https://github.com/sunshinev/db2struct) Forked (https://github.com/Shelnutt2/db2struct) and modify Generate func
-	columnDataTypes, err := db2struct.GetColumnsFromMysqlTable(c.User, c.Password, c.Host, c.Port, c.Database, table)
+func (g *Generator) parseTable(s *Sword, table string) {
+
+	columnDataTypes, err := utils.Db2struct{}.Convert(s, table)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	structName := strings.Replace(table, "_", " ", -1)
-	structName = strings.Title(structName)
-	structName = strings.Replace(structName, " ", "", -1)
+	structName := strings.Replace(strings.Title(strings.Replace("hi_ni_hao", "_", " ", -1)), " ", "", -1)
 
 	// Set columns
-	columnDT := *columnDataTypes
-	for name := range columnDT {
-		g.Columns = append(g.Columns, name)
-		g.ColumnDataTypes[name] = columnDT[name]["value"]
+	for _, r := range *columnDataTypes {
+		g.Columns = append(g.Columns, r.ColumnName)
+		g.ColumnDataTypes[r.ColumnName] = r.DataType
 	}
 
-	g.Columns = untils.ResortMySQLFields(&g.Columns)
+	g.Columns = utils.ResortMySQLFields(&g.Columns)
 
-	struc, err := db2struct.Generate(*columnDataTypes, table, structName, table, true, true, false)
-	if err != nil {
-		panic(err.Error())
-	}
+	struc := utils.Db2struct{}.FetchWholeStructFile(table, structName, table, columnDataTypes)
 
 	// Set TableName
 	g.TableName = table
@@ -85,8 +78,8 @@ func (g *Generator) parseTable(c *config.DbSet, table string) {
 	g.Struc = struc
 }
 
-func (g *Generator) Preview(c *config.DbSet, table string) {
-	g.parseTable(c, table)
+func (g *Generator) Preview(s *Sword, table string) {
+	g.parseTable(s, table)
 	// Main.go
 	g.gMainFile()
 	// Core.go
@@ -114,13 +107,13 @@ func (g *Generator) Preview(c *config.DbSet, table string) {
 
 }
 
-func (g *Generator) Generate(c *config.DbSet, table string, files []string) {
-	g.Preview(c, table)
+func (g *Generator) Generate(s *Sword, table string, files []string) {
+	g.Preview(s, table)
 
 	for _, file := range g.FileList {
 		var path = file.FilePath
 		// Files filter, only create selected file
-		if !untils.IsContain(path, files) {
+		if !utils.IsContain(path, files) {
 			continue
 		}
 		// Remember files need to generate
@@ -165,15 +158,15 @@ func (g *Generator) gModelFile() {
 // Create model file content
 func (g *Generator) createModelContent() string {
 	// Modify g.Struc & add import
-	if strings.Contains(string(g.Struc), "time.Time") {
+	if strings.Contains(g.Struc, "time.Time") {
 		str := "package " + g.PackageName
 		newStr := "package model" + `
 import "time"
 `
-		return strings.Replace(string(g.Struc), str, newStr, 1)
+		return strings.Replace(g.Struc, str, newStr, 1)
 	}
 
-	return string(g.Struc)
+	return g.Struc
 }
 
 func (g *Generator) gControllerFile() {
@@ -237,7 +230,7 @@ func (g *Generator) createListHtml() string {
 		columnList = columnList + fmt.Sprintf("{title:'%s', key:'%s'},\n", name, name)
 		searchFields = searchFields + fmt.Sprintf("'%s',\n", name)
 
-		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, untils.ConvertFieldsType2Js(g.ColumnDataTypes[name]))
+		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, utils.ConvertFieldsType2Js(g.ColumnDataTypes[name]))
 	}
 
 	content := string(data)
@@ -279,7 +272,7 @@ func (g *Generator) createCreateHtml() string {
 		}
 		info = info + fmt.Sprintf("%s:'',\n", name)
 
-		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, untils.ConvertFieldsType2Js(g.ColumnDataTypes[name]))
+		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, utils.ConvertFieldsType2Js(g.ColumnDataTypes[name]))
 
 	}
 
@@ -316,7 +309,7 @@ func (g *Generator) createEditHtml() string {
 
 	for _, name := range g.Columns {
 		info = info + fmt.Sprintf("%s:'',\n", name)
-		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, untils.ConvertFieldsType2Js(g.ColumnDataTypes[name]))
+		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, utils.ConvertFieldsType2Js(g.ColumnDataTypes[name]))
 	}
 
 	content := string(data)
