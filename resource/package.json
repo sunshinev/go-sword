@@ -11,7 +11,7 @@
     "axios": "^0.19.0",
     "compression-webpack-plugin": "^3.1.0",
     "core-js": "^3.3.2",
-    "highlight.js": "^10.0.1",
+    "highlight.js": "^10.1.2",
     "http-vue-loader": "git+https://github.com/sunshinev/http-vue-loader.git",
     "iview": "^3.5.3",
     "view-design": "git+https://github.com/sunshinev/ViewUI.git",
