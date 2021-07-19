@@ -1,4 +1,4 @@
-package main
+package gosword
 
 import (
 	"compress/gzip"
@@ -12,10 +12,10 @@ import (
 
 	"github.com/sunshinev/go-sword/config"
 
+	"github.com/sunshinev/go-sword/assets/view"
+
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/sunshinev/go-sword/assets/resource"
-
-	"github.com/sunshinev/go-sword/assets/view"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -32,22 +32,26 @@ func (u *gZipWriter) Write(p []byte) (int, error) {
 type Sword struct {
 }
 
-func Init() *Sword {
+func Init(configFile string) *Sword {
 	// 初始化配置
-	config.Config{}.InitConfig()
+	err := config.Config{}.LoadConfig(configFile)
 
+	if err != nil {
+		log.Fatalf("sword init err %v", err)
+	}
 	return &Sword{}
 }
 
 func (s *Sword) Run() {
-	// Default Route
+	// 数据表列表
 	http.HandleFunc("/api/model/table_list", s.tableList)
+	// 预览
 	http.HandleFunc("/api/model/preview", s.Preview)
+	// 创建生成文件
 	http.HandleFunc("/api/model/generate", s.Generate)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-
-		//Static file route
+		// 静态文件路由
 		fs := assetfs.AssetFS{
 			Asset:     resource.Asset,
 			AssetDir:  resource.AssetDir,
@@ -74,11 +78,13 @@ func (s *Sword) Run() {
 
 	s.Welcome()
 
-	// Start server
-	err := http.ListenAndServe(":"+config.GlobalConfig.ServerPort, nil)
-	if err != nil {
-		log.Fatalf("Go-sword start err: %v", err)
-	}
+	//Start server
+	go func() {
+		err := http.ListenAndServe(":"+config.GlobalConfig.ServerPort, nil)
+		if err != nil {
+			log.Fatalf("Go-sword start err: %v", err)
+		}
+	}()
 }
 
 type GenerateParams struct {
@@ -205,23 +211,16 @@ func (s *Sword) Render(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// 从view目录中寻找文件
-	//body := s.readFile("view" + path + ".html")
+	// body,err := ioutil.ReadFile("view/"+path+".html")
+	// 这里使用go-bindata释放到views目录，通过go文件加载资源，少了文件读写；使用bindata每次修改完html文件之后，需要重新生成views资源
 	body, err := view.Asset("view" + path + ".html")
-
+	if err != nil {
+		panic(err)
+	}
 	_, err = writer.Write(body)
-
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
-}
-
-func (s *Sword) readFile(path string) []byte {
-	body, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return body
 }
 
 func (s *Sword) Welcome() {

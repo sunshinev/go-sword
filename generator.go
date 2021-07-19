@@ -1,4 +1,4 @@
-package main
+package gosword
 
 import (
 	"fmt"
@@ -8,10 +8,11 @@ import (
 	"strconv"
 	"strings"
 
+	config2 "github.com/sunshinev/go-sword/config"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/sunshinev/go-sword/assets/resource"
 	"github.com/sunshinev/go-sword/assets/stub"
-	"github.com/sunshinev/go-sword/config"
 	"github.com/sunshinev/go-sword/utils"
 )
 
@@ -24,7 +25,7 @@ type Generator struct {
 	TableName       string
 	// Files need to generate
 	FileList []*FileInstance
-	config   *config.Config
+	config   *config2.Config
 	// Generate files list
 	GFileList []*FileInstance
 }
@@ -40,7 +41,7 @@ type FileInstance struct {
 
 func (g Generator) Init() *Generator {
 	return &Generator{
-		config:          config.GlobalConfig,
+		config:          config2.GlobalConfig,
 		ColumnDataTypes: map[string]string{},
 	}
 }
@@ -73,8 +74,8 @@ func (g *Generator) parseTable(table string) {
 func (g *Generator) Preview(table string) {
 	g.parseTable(table)
 
-	g.gGoModFile()      // go.mod
-	g.gMainFile()       // Main.go
+	//g.gGoModFile()      // go.mod
+	//g.gMainFile()       // Main.go
 	g.gCoreFile()       // Core.go
 	g.gRouteFile()      // Route.go
 	g.gModelFile()      // Model
@@ -176,8 +177,8 @@ func (g *Generator) createControllerContent() string {
 	// replace
 	packageName := g.TableName
 	modelStruct := "model." + g.StructName
-	importModel := g.config.RootPath + "/model"
-	importResponse := g.config.RootPath + "/core/response"
+	importModel := fmt.Sprintf("%v/%v/%v", g.config.ModuleName, g.config.RootPath, "model")
+	importResponse := fmt.Sprintf("%v/%v/%v", g.config.ModuleName, g.config.RootPath, "core/response")
 
 	content := string(data)
 
@@ -402,7 +403,7 @@ func (g *Generator) createRouteContent(path string) string {
 	str = strings.ReplaceAll(str, "%s", g.TableName)
 
 	var importStr = `"%s/controller/%s"`
-	importStr = fmt.Sprintf(importStr, g.config.RootPath, g.TableName)
+	importStr = fmt.Sprintf(importStr, strings.Join([]string{g.config.ModuleName, g.config.RootPath}, "/"), g.TableName)
 
 	// Check if content repeated,if true then ignore replace
 	content := string(data)
@@ -445,7 +446,7 @@ func (g *Generator) createGoModContent() string {
 		panic(err.Error())
 	}
 	content := string(data)
-	content = strings.ReplaceAll(content, "<<module_name>>", g.config.RootPath)
+	content = strings.ReplaceAll(content, "<<module_name>>", g.config.ModuleName)
 	return content
 }
 
@@ -456,7 +457,7 @@ func (g *Generator) createMainContent() string {
 		panic(err.Error())
 	}
 
-	str := strings.Join([]string{g.config.RootPath, "core"}, "/")
+	str := strings.Join([]string{g.config.ModuleName, g.config.RootPath, "core"}, "/")
 
 	content := string(data)
 
@@ -486,7 +487,7 @@ func (g *Generator) createCoreContent() string {
 		panic(err.Error())
 	}
 
-	str := strings.Join([]string{g.config.RootPath, "route"}, "/")
+	str := strings.Join([]string{g.config.ModuleName, g.config.RootPath, "route"}, "/")
 
 	content := string(data)
 
