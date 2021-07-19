@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/sunshinev/go-sword/core"
 )
 
 func main() {
@@ -20,5 +18,5 @@ func main() {
 +---------------------------------------------------+
 `)
 
-	core.Init().Run()
+	Init().Run()
 }

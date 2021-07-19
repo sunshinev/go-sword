@@ -1,6 +1,8 @@
 [![e5355b6316b83dcf4b6be9b7544f8e331588255151.jpg](https://github.com/sunshinev/remote_pics/raw/master/e5355b6316b83dcf4b6be9b7544f8e331588255151.jpg)](https://sunshinev.github.io/go-sword-home/)
 
-Go-sword(利刃)是一款基于Go语言的可视化web管理后台生成工具
+Go-sword(利刃) V2.0.0
+
+一款基于Go语言的可视化web管理后台生成工具包
 
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/sunshinev/go-sword)
