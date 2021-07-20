@@ -666,7 +666,7 @@ func (s *Generator) fmtCode() error {
 	}
 
 	// 创建临时目录
-	dir, err := ioutil.TempDir("/tmp", "temp")
+	dir, err := ioutil.TempDir("", "temp")
 	if err != nil {
 		log.Printf("create tempdir %v err %v", dir, err)
 		return err
