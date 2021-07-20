@@ -13,6 +13,8 @@ Go-sword(利刃) V2.0.0
 
 [官网 https://sunshinev.github.io/go-sword-home/](https://sunshinev.github.io/go-sword-home/)
 
+官方文档更新可能不及时，请以GIT README.md为准
+
 ## 升级说明
 v2.0.0 
 1. 修改为以包引入的方式来启动工具+创建后端
@@ -25,6 +27,9 @@ v1.0.0
 
 
 Gosword会在项目指定目录，释放一个完整的后台代码，包括前端、后端
+
+### 重要
+1. 用来生成后端页面的数据表，要有id,created_at,updated_at三个必备字段
 
 ### 安装
 ```
