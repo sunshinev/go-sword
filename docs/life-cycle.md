@@ -1,8 +1,6 @@
 
-# 生命周期
+## 生命周期
 
-### 腾讯文档
-点击链接访问腾讯文档高清图例
 
 [【腾讯文档】Go-sword 全生命周期 https://docs.qq.com/slide/DWk5sZVhncUpob1hj](https://docs.qq.com/slide/DWk5sZVhncUpob1hj)
 
