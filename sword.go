@@ -3,6 +3,7 @@ package gosword
 import (
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -10,14 +11,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sunshinev/go-sword/config"
-
-	"github.com/sunshinev/go-sword/assets/view"
-
 	assetfs "github.com/elazarl/go-bindata-assetfs"
-	"github.com/sunshinev/go-sword/assets/resource"
-
 	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/sunshinev/go-sword/assets/resource"
+	"github.com/sunshinev/go-sword/assets/view"
+	"github.com/sunshinev/go-sword/config"
 )
 
 type gZipWriter struct {
@@ -32,6 +31,10 @@ func (u *gZipWriter) Write(p []byte) (int, error) {
 type Sword struct {
 }
 
+func init() {
+	log.SetFlags(log.Ldate | log.Llongfile)
+}
+
 func Init(configFile string) *Sword {
 	// 初始化配置
 	err := config.Config{}.LoadConfig(configFile)
@@ -44,11 +47,11 @@ func Init(configFile string) *Sword {
 
 func (s *Sword) Run() {
 	// 数据表列表
-	http.HandleFunc("/api/model/table_list", s.tableList)
+	http.HandleFunc("/api/model/table_list", s.handleError(s.tableList))
 	// 预览
-	http.HandleFunc("/api/model/preview", s.Preview)
+	http.HandleFunc("/api/model/preview", s.handleError(s.Preview))
 	// 创建生成文件
-	http.HandleFunc("/api/model/generate", s.Generate)
+	http.HandleFunc("/api/model/generate", s.handleError(s.Generate))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// 静态文件路由
@@ -74,7 +77,7 @@ func (s *Sword) Run() {
 	})
 
 	// Render vue component
-	http.HandleFunc("/render", s.Render)
+	http.HandleFunc("/render", s.handleError(s.Render))
 
 	s.Welcome()
 
@@ -87,16 +90,33 @@ func (s *Sword) Run() {
 	}()
 }
 
+func (s *Sword) handleError(h func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter,
+	r *http.Request) {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("panic %v", err)
+			}
+		}()
+
+		err := h(w, r)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+		}
+	}
+}
+
 type GenerateParams struct {
 	TableName string   `json:"table_name"`
 	Files     []string `json:"files"`
 }
 
 // Get database table list
-func (s *Sword) tableList(w http.ResponseWriter, r *http.Request) {
+func (s *Sword) tableList(w http.ResponseWriter, r *http.Request) error {
 	rows, err := config.GlobalConfig.DbConn.Query("SHOW TABLES")
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	tables := []string{}
@@ -116,24 +136,26 @@ func (s *Sword) tableList(w http.ResponseWriter, r *http.Request) {
 
 	_, err = w.Write(jsonData)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
+
+	return nil
 }
 
-func (s *Sword) Preview(w http.ResponseWriter, r *http.Request) {
+func (s *Sword) Preview(w http.ResponseWriter, r *http.Request) error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	var data map[string]string
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	if data["table_name"] == "" {
-		panic("tableName is empty")
+		return errors.New("tableName is empty")
 	}
 
 	g := Generator{}.Init()
@@ -146,37 +168,38 @@ func (s *Sword) Preview(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 	_, err = w.Write(ret)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
+	return nil
 }
 
-func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
+func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	var data = &GenerateParams{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	if data.TableName == "" {
-		panic("tableName is empty")
+		return errors.New("tableName is empty")
 	}
 
 	if len(data.Files) == 0 {
-		panic("Files is empty")
+		return errors.New("Files is empty")
 	}
 
 	g := Generator{}.Init()
-	g.Generate(s, data.TableName, data.Files)
+	g.Generate(data.TableName, data.Files)
 
 	ret, err := json.Marshal(Ret{
 		Code: http.StatusOK,
@@ -187,27 +210,24 @@ func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
 
 	_, err = w.Write(ret)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
+	return nil
 }
 
-func (s *Sword) Render(writer http.ResponseWriter, request *http.Request) {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Printf("panic %v", err)
-		}
-	}()
+func (s *Sword) Render(writer http.ResponseWriter, request *http.Request) error {
+
 	// 解析参数，映射到文件
 	err := request.ParseForm()
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	path := request.FormValue("path")
 
 	if path == "" {
-		panic("lose path param")
+		return errors.New("lose path param")
 	}
 
 	// 从view目录中寻找文件
@@ -215,12 +235,14 @@ func (s *Sword) Render(writer http.ResponseWriter, request *http.Request) {
 	// 这里使用go-bindata释放到views目录，通过go文件加载资源，少了文件读写；使用bindata每次修改完html文件之后，需要重新生成views资源
 	body, err := view.Asset("view" + path + ".html")
 	if err != nil {
-		panic(err)
+		return err
 	}
 	_, err = writer.Write(body)
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
 func (s *Sword) Welcome() {

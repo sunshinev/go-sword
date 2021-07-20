@@ -3,12 +3,14 @@ package gosword
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 
-	config2 "github.com/sunshinev/go-sword/config"
+	"github.com/sunshinev/go-sword/config"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/sunshinev/go-sword/assets/resource"
@@ -25,7 +27,7 @@ type Generator struct {
 	TableName       string
 	// Files need to generate
 	FileList []*FileInstance
-	config   *config2.Config
+	config   *config.Config
 	// Generate files list
 	GFileList []*FileInstance
 }
@@ -39,15 +41,15 @@ type FileInstance struct {
 	IsNew          bool   `json:"is_new"`
 }
 
-func (g Generator) Init() *Generator {
+func (s Generator) Init() *Generator {
 	return &Generator{
-		config:          config2.GlobalConfig,
+		config:          config.GlobalConfig,
 		ColumnDataTypes: map[string]string{},
 	}
 }
 
 // Entry
-func (g *Generator) parseTable(table string) {
+func (s *Generator) parseTable(table string) {
 
 	columnDataTypes, err := utils.Db2struct{}.Convert(table)
 	if err != nil {
@@ -56,55 +58,60 @@ func (g *Generator) parseTable(table string) {
 
 	// Set columns
 	for _, r := range *columnDataTypes {
-		g.Columns = append(g.Columns, r.ColumnName)
-		g.ColumnDataTypes[r.ColumnName] = r.DataType
+		s.Columns = append(s.Columns, r.ColumnName)
+		s.ColumnDataTypes[r.ColumnName] = r.DataType
 	}
-	g.Columns = utils.ResortMySQLFields(&g.Columns)
+	s.Columns = utils.ResortMySQLFields(&s.Columns)
 	// Set TableName
-	g.TableName = table
+	s.TableName = table
 	// Set PackageName
-	g.PackageName = table
+	s.PackageName = table
 	// Set StructName
 	structName := strings.Replace(strings.Title(strings.Replace(table, "_", " ", -1)), " ", "", -1)
-	g.StructName = structName
+	s.StructName = structName
 	// Set Content
-	g.Struc = utils.Db2struct{}.FetchWholeStructFile("model", structName, table, columnDataTypes)
+	s.Struc = utils.Db2struct{}.FetchWholeStructFile("model", structName, table, columnDataTypes)
 }
 
-func (g *Generator) Preview(table string) {
-	g.parseTable(table)
+func (s *Generator) Preview(table string) {
+	s.parseTable(table)
 
-	//g.gGoModFile()      // go.mod
-	//g.gMainFile()       // Main.go
-	g.gCoreFile()       // Core.go
-	g.gRouteFile()      // Route.go
-	g.gModelFile()      // Model
-	g.gControllerFile() // Controller
-	g.gResponseFile()   // Response
+	//s.gGoModFile()      // go.mod
+	//s.gMainFile()       // Main.go
+	s.gCoreFile()       // Core.go
+	s.gRouteFile()      // Route.go
+	s.gModelFile()      // Model
+	s.gControllerFile() // Controller
+	s.gResponseFile()   // Response
 
-	g.gHtmlDefaultFile() // default.html
-	g.gHtmlListFile()    // list.htm
-	g.gHtmlCreateFile()
-	g.gHtmlDetailFile()
-	g.gHtmlEditFile()
+	s.gHtmlDefaultFile() // default.html
+	s.gHtmlListFile()    // list.htm
+	s.gHtmlCreateFile()
+	s.gHtmlDetailFile()
+	s.gHtmlEditFile()
 
-	for _, file := range g.FileList {
-		g.handleFile(file)
+	err := s.fmtCode()
+	if err != nil {
+
+	}
+
+	for _, file := range s.FileList {
+		s.handleFile(file)
 	}
 
 }
 
-func (g *Generator) Generate(s *Sword, table string, files []string) {
-	g.Preview(table)
+func (s *Generator) Generate(table string, files []string) {
+	s.Preview(table)
 
-	for _, file := range g.FileList {
+	for _, file := range s.FileList {
 		var path = file.FilePath
 		// Files filter, only create selected file
 		if !utils.IsContain(path, files) {
 			continue
 		}
 		// Remember files need to generate
-		g.GFileList = append(g.GFileList, file)
+		s.GFileList = append(s.GFileList, file)
 
 		_, err := os.Stat(path)
 		if err != nil {
@@ -128,46 +135,46 @@ func (g *Generator) Generate(s *Sword, table string, files []string) {
 	}
 
 	// Explode resource, Recreate every time you click generate button
-	g.gResourceRestore()
+	s.gResourceRestore()
 }
 
-func (g *Generator) gModelFile() {
-	content := g.createModelContent()
+func (s *Generator) gModelFile() {
+	content := s.createModelContent()
 	file := &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "model", g.TableName+".go"),
-		FileName:    g.TableName + ".go",
+		FilePath:    filepath.Join(s.config.RootPath, "model", s.TableName+".go"),
+		FileName:    s.TableName + ".go",
 		FileContent: content,
 	}
 
-	g.FileList = append(g.FileList, file)
+	s.FileList = append(s.FileList, file)
 }
 
 // Create model file content
-func (g *Generator) createModelContent() string {
-	// Modify g.Struc & add import
-	if strings.Contains(g.Struc, "time.Time") {
-		str := "package " + g.PackageName
+func (s *Generator) createModelContent() string {
+	// Modify s.Struc & add import
+	if strings.Contains(s.Struc, "time.Time") {
+		str := "package " + s.PackageName
 		newStr := "package model" + `
 import "time"
 `
-		return strings.Replace(g.Struc, str, newStr, 1)
+		return strings.Replace(s.Struc, str, newStr, 1)
 	}
 
-	return g.Struc
+	return s.Struc
 }
 
-func (g *Generator) gControllerFile() {
+func (s *Generator) gControllerFile() {
 	var file = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "controller", g.TableName, g.TableName+".go"),
-		FileName:    g.TableName + ".go",
-		FileContent: g.createControllerContent(),
+		FilePath:    filepath.Join(s.config.RootPath, "controller", s.TableName, s.TableName+".go"),
+		FileName:    s.TableName + ".go",
+		FileContent: s.createControllerContent(),
 	}
 
-	g.FileList = append(g.FileList, file)
+	s.FileList = append(s.FileList, file)
 }
 
 // Create model file content
-func (g *Generator) createControllerContent() string {
+func (s *Generator) createControllerContent() string {
 	// Read stub
 	data, err := stub.Asset("stub/controller/controller.stub")
 	if err != nil {
@@ -175,10 +182,10 @@ func (g *Generator) createControllerContent() string {
 	}
 
 	// replace
-	packageName := g.TableName
-	modelStruct := "model." + g.StructName
-	importModel := fmt.Sprintf("%v/%v/%v", g.config.ModuleName, g.config.RootPath, "model")
-	importResponse := fmt.Sprintf("%v/%v/%v", g.config.ModuleName, g.config.RootPath, "core/response")
+	packageName := s.TableName
+	modelStruct := "model." + s.StructName
+	importModel := fmt.Sprintf("%v/%v/%v", s.config.ModuleName, s.config.RootPath, "model")
+	importResponse := fmt.Sprintf("%v/%v/%v", s.config.ModuleName, s.config.RootPath, "core/response")
 
 	content := string(data)
 
@@ -190,18 +197,18 @@ func (g *Generator) createControllerContent() string {
 	return content
 }
 
-func (g *Generator) gHtmlListFile() {
+func (s *Generator) gHtmlListFile() {
 	var file = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "view", g.TableName, "list.html"),
+		FilePath:    filepath.Join(s.config.RootPath, "view", s.TableName, "list.html"),
 		FileName:    "list.html",
-		FileContent: g.createListHtml(),
+		FileContent: s.createListHtml(),
 	}
 
-	g.FileList = append(g.FileList, file)
+	s.FileList = append(s.FileList, file)
 }
 
 // Create model file content
-func (g *Generator) createListHtml() string {
+func (s *Generator) createListHtml() string {
 	// Read stub
 	data, err := stub.Asset("stub/html/list.stub")
 	if err != nil {
@@ -213,16 +220,16 @@ func (g *Generator) createListHtml() string {
 	var searchFields = ""
 	var fieldsType = ""
 
-	for _, name := range g.Columns {
+	for _, name := range s.Columns {
 		columnList = columnList + fmt.Sprintf("{title:'%s', key:'%s'},\n", name, name)
 		searchFields = searchFields + fmt.Sprintf("'%s',\n", name)
 
-		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, utils.ConvertFieldsType2Js(g.ColumnDataTypes[name]))
+		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, utils.ConvertFieldsType2Js(s.ColumnDataTypes[name]))
 	}
 
 	content := string(data)
 
-	content = strings.ReplaceAll(content, "<<table_name>>", g.TableName)
+	content = strings.ReplaceAll(content, "<<table_name>>", s.TableName)
 	content = strings.ReplaceAll(content, "<<js_data_column_list>>", columnList)
 	content = strings.ReplaceAll(content, "<<js_data_search_fields>>", searchFields)
 	content = strings.ReplaceAll(content, "<<js_data_fields_type>>", fieldsType)
@@ -230,18 +237,18 @@ func (g *Generator) createListHtml() string {
 	return content
 }
 
-func (g *Generator) gHtmlCreateFile() {
+func (s *Generator) gHtmlCreateFile() {
 	var file = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "view", g.TableName, "create.html"),
+		FilePath:    filepath.Join(s.config.RootPath, "view", s.TableName, "create.html"),
 		FileName:    "create.html",
-		FileContent: g.createCreateHtml(),
+		FileContent: s.createCreateHtml(),
 	}
 
-	g.FileList = append(g.FileList, file)
+	s.FileList = append(s.FileList, file)
 }
 
 // Create  file content
-func (g *Generator) createCreateHtml() string {
+func (s *Generator) createCreateHtml() string {
 	// Read stub
 	data, err := stub.Asset("stub/html/create.stub")
 	if err != nil {
@@ -252,38 +259,38 @@ func (g *Generator) createCreateHtml() string {
 	var info = ""
 	var fieldsType = ""
 
-	for _, name := range g.Columns {
+	for _, name := range s.Columns {
 		// Create ignore `id` field
 		if name == "id" || name == "created_at" || name == "updated_at" {
 			continue
 		}
 		info = info + fmt.Sprintf("%s:'',\n", name)
 
-		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, utils.ConvertFieldsType2Js(g.ColumnDataTypes[name]))
+		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, utils.ConvertFieldsType2Js(s.ColumnDataTypes[name]))
 
 	}
 
 	content := string(data)
 
 	content = strings.ReplaceAll(content, "<<js_data_fields_type>>", fieldsType)
-	content = strings.ReplaceAll(content, "<<table_name>>", g.TableName)
+	content = strings.ReplaceAll(content, "<<table_name>>", s.TableName)
 	content = strings.ReplaceAll(content, "<<js_data_info>>", info)
 
 	return content
 }
 
-func (g *Generator) gHtmlEditFile() {
+func (s *Generator) gHtmlEditFile() {
 	var file = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "view", g.TableName, "edit.html"),
+		FilePath:    filepath.Join(s.config.RootPath, "view", s.TableName, "edit.html"),
 		FileName:    "edit.html",
-		FileContent: g.createEditHtml(),
+		FileContent: s.createEditHtml(),
 	}
 
-	g.FileList = append(g.FileList, file)
+	s.FileList = append(s.FileList, file)
 }
 
 // Create  file content
-func (g *Generator) createEditHtml() string {
+func (s *Generator) createEditHtml() string {
 	// Read stub
 	data, err := stub.Asset("stub/html/edit.stub")
 	if err != nil {
@@ -294,32 +301,32 @@ func (g *Generator) createEditHtml() string {
 	var info = ""
 	var fieldsType = ""
 
-	for _, name := range g.Columns {
+	for _, name := range s.Columns {
 		info = info + fmt.Sprintf("%s:'',\n", name)
-		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, utils.ConvertFieldsType2Js(g.ColumnDataTypes[name]))
+		fieldsType = fieldsType + fmt.Sprintf("%s:'%s',\n", name, utils.ConvertFieldsType2Js(s.ColumnDataTypes[name]))
 	}
 
 	content := string(data)
 
 	content = strings.ReplaceAll(content, "<<js_data_fields_type>>", fieldsType)
-	content = strings.ReplaceAll(content, "<<table_name>>", g.TableName)
+	content = strings.ReplaceAll(content, "<<table_name>>", s.TableName)
 	content = strings.ReplaceAll(content, "<<js_data_info>>", info)
 
 	return content
 }
 
-func (g *Generator) gHtmlDetailFile() {
+func (s *Generator) gHtmlDetailFile() {
 	var file = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "view", g.TableName, "detail.html"),
+		FilePath:    filepath.Join(s.config.RootPath, "view", s.TableName, "detail.html"),
 		FileName:    "detail.html",
-		FileContent: g.createDetailHtml(),
+		FileContent: s.createDetailHtml(),
 	}
 
-	g.FileList = append(g.FileList, file)
+	s.FileList = append(s.FileList, file)
 }
 
 // Create  file content
-func (g *Generator) createDetailHtml() string {
+func (s *Generator) createDetailHtml() string {
 	// Read stub
 	data, err := stub.Asset("stub/html/detail.stub")
 	if err != nil {
@@ -329,44 +336,44 @@ func (g *Generator) createDetailHtml() string {
 	// replace
 	var info = ""
 
-	for _, name := range g.Columns {
+	for _, name := range s.Columns {
 		info = info + fmt.Sprintf("%s:'',\n", name)
 	}
 
 	content := string(data)
 
-	content = strings.ReplaceAll(content, "<<table_name>>", g.TableName)
+	content = strings.ReplaceAll(content, "<<table_name>>", s.TableName)
 	content = strings.ReplaceAll(content, "<<js_data_info>>", info)
 
 	return content
 }
 
-func (g *Generator) gRouteFile() {
+func (s *Generator) gRouteFile() {
 	var file = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "route", "route.go"),
+		FilePath:    filepath.Join(s.config.RootPath, "route", "route.go"),
 		FileName:    "route.go",
-		FileContent: g.getRouteContent(),
+		FileContent: s.getRouteContent(),
 	}
 
-	g.FileList = append(g.FileList, file)
+	s.FileList = append(s.FileList, file)
 }
 
-func (g *Generator) getRouteContent() string {
-	var path = filepath.Join(g.config.RootPath, "route", "route.go")
+func (s *Generator) getRouteContent() string {
+	var path = filepath.Join(s.config.RootPath, "route", "route.go")
 
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return g.createRouteContent("")
+			return s.createRouteContent("")
 		}
 
 		panic(err.Error())
 	}
 
-	return g.createRouteContent(path)
+	return s.createRouteContent(path)
 }
 
-func (g *Generator) createRouteContent(path string) string {
+func (s *Generator) createRouteContent(path string) string {
 
 	var data = []byte{}
 	var err error
@@ -400,10 +407,10 @@ func (g *Generator) createRouteContent(path string) string {
 	http.HandleFunc("/api/%s/edit", %s.Edit(db))
 	http.HandleFunc("/api/%s/batch_delete", %s.BatchDelete(db))`
 
-	str = strings.ReplaceAll(str, "%s", g.TableName)
+	str = strings.ReplaceAll(str, "%s", s.TableName)
 
 	var importStr = `"%s/controller/%s"`
-	importStr = fmt.Sprintf(importStr, strings.Join([]string{g.config.ModuleName, g.config.RootPath}, "/"), g.TableName)
+	importStr = fmt.Sprintf(importStr, strings.Join([]string{s.config.ModuleName, s.config.RootPath}, "/"), s.TableName)
 
 	// Check if content repeated,if true then ignore replace
 	content := string(data)
@@ -419,75 +426,75 @@ func (g *Generator) createRouteContent(path string) string {
 	return content
 }
 
-func (g *Generator) gGoModFile() {
+func (s *Generator) gGoModFile() {
 	var file = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "go.mod"),
+		FilePath:    filepath.Join(s.config.RootPath, "go.mod"),
 		FileName:    "go.mod",
-		FileContent: g.createGoModContent(),
+		FileContent: s.createGoModContent(),
 	}
 
-	g.FileList = append(g.FileList, file)
+	s.FileList = append(s.FileList, file)
 }
 
-func (g *Generator) gMainFile() {
+func (s *Generator) gMainFile() {
 	var file = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "main.go"),
+		FilePath:    filepath.Join(s.config.RootPath, "main.go"),
 		FileName:    "main.go",
-		FileContent: g.createMainContent(),
+		FileContent: s.createMainContent(),
 	}
 
-	g.FileList = append(g.FileList, file)
+	s.FileList = append(s.FileList, file)
 }
 
-func (g *Generator) createGoModContent() string {
+func (s *Generator) createGoModContent() string {
 	// Read stub
 	data, err := stub.Asset("stub/go.mod.stub")
 	if err != nil {
 		panic(err.Error())
 	}
 	content := string(data)
-	content = strings.ReplaceAll(content, "<<module_name>>", g.config.ModuleName)
+	content = strings.ReplaceAll(content, "<<module_name>>", s.config.ModuleName)
 	return content
 }
 
-func (g *Generator) createMainContent() string {
+func (s *Generator) createMainContent() string {
 	// Read stub
 	data, err := stub.Asset("stub/main.stub")
 	if err != nil {
 		panic(err.Error())
 	}
 
-	str := strings.Join([]string{g.config.ModuleName, g.config.RootPath, "core"}, "/")
+	str := strings.Join([]string{s.config.ModuleName, s.config.RootPath, "core"}, "/")
 
 	content := string(data)
 
-	content = strings.ReplaceAll(content, "<<db_host>>", g.config.DatabaseSet.Host)
-	content = strings.ReplaceAll(content, "<<db_user>>", g.config.DatabaseSet.User)
-	content = strings.ReplaceAll(content, "<<db_password>>", g.config.DatabaseSet.Password)
-	content = strings.ReplaceAll(content, "<<db_port>>", strconv.Itoa(g.config.DatabaseSet.Port))
-	content = strings.ReplaceAll(content, "<<db_database>>", g.config.DatabaseSet.Database)
+	content = strings.ReplaceAll(content, "<<db_host>>", s.config.DatabaseSet.Host)
+	content = strings.ReplaceAll(content, "<<db_user>>", s.config.DatabaseSet.User)
+	content = strings.ReplaceAll(content, "<<db_password>>", s.config.DatabaseSet.Password)
+	content = strings.ReplaceAll(content, "<<db_port>>", strconv.Itoa(s.config.DatabaseSet.Port))
+	content = strings.ReplaceAll(content, "<<db_database>>", s.config.DatabaseSet.Database)
 	content = strings.ReplaceAll(content, "<<import_core>>", str)
 	return content
 }
 
-func (g *Generator) gCoreFile() {
+func (s *Generator) gCoreFile() {
 
 	var file = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "core", "core.go"),
+		FilePath:    filepath.Join(s.config.RootPath, "core", "core.go"),
 		FileName:    "core.go",
-		FileContent: g.createCoreContent(),
+		FileContent: s.createCoreContent(),
 	}
 
-	g.FileList = append(g.FileList, file)
+	s.FileList = append(s.FileList, file)
 }
-func (g *Generator) createCoreContent() string {
+func (s *Generator) createCoreContent() string {
 	// Read stub
 	data, err := stub.Asset("stub/core/core.stub")
 	if err != nil {
 		panic(err.Error())
 	}
 
-	str := strings.Join([]string{g.config.ModuleName, g.config.RootPath, "route"}, "/")
+	str := strings.Join([]string{s.config.ModuleName, s.config.RootPath, "route"}, "/")
 
 	content := string(data)
 
@@ -495,32 +502,32 @@ func (g *Generator) createCoreContent() string {
 	return content
 }
 
-func (g *Generator) gHtmlDefaultFile() {
+func (s *Generator) gHtmlDefaultFile() {
 	var file = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "view", "layout", "default.html"),
+		FilePath:    filepath.Join(s.config.RootPath, "view", "layout", "default.html"),
 		FileName:    "default.html",
-		FileContent: g.getHtmlDefaultFile(),
+		FileContent: s.getHtmlDefaultFile(),
 	}
 
-	g.FileList = append(g.FileList, file)
+	s.FileList = append(s.FileList, file)
 }
 
-func (g *Generator) getHtmlDefaultFile() string {
-	var path = filepath.Join(g.config.RootPath, "view", "layout", "default.html")
+func (s *Generator) getHtmlDefaultFile() string {
+	var path = filepath.Join(s.config.RootPath, "view", "layout", "default.html")
 
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return g.createDefaultHtml("")
+			return s.createDefaultHtml("")
 		}
 
 		panic(err.Error())
 	}
 
-	return g.createDefaultHtml(path)
+	return s.createDefaultHtml(path)
 }
 
-func (g *Generator) createDefaultHtml(path string) string {
+func (s *Generator) createDefaultHtml(path string) string {
 	var data = []byte{}
 	var err error
 
@@ -544,7 +551,7 @@ func (g *Generator) createDefaultHtml(path string) string {
 	}
 
 	// replace
-	var menu = fmt.Sprintf(`{icon: 'ios-people',title: '%s',name:'%s_list'},`, g.TableName, g.TableName)
+	var menu = fmt.Sprintf(`{icon: 'ios-people',title: '%s',name:'%s_list'},`, s.TableName, s.TableName)
 	var routeSets = []string{"list", "create", "detail", "edit"}
 	var route = ""
 
@@ -553,10 +560,10 @@ func (g *Generator) createDefaultHtml(path string) string {
                     name: 'user_list',
                     path: '/user/list',
                     url: '/render?path=/user/list'
-                },`, "user", g.TableName), "list", set)
+                },`, "user", s.TableName), "list", set)
 	}
 
-	var defaultRoute = g.TableName + "_list"
+	var defaultRoute = s.TableName + "_list"
 
 	// Check if content repeated,if true then ignore replace
 	content := string(data)
@@ -570,22 +577,22 @@ func (g *Generator) createDefaultHtml(path string) string {
 	}
 
 	content = strings.ReplaceAll(content, "<<default_route>>", defaultRoute)
-	content = strings.ReplaceAll(content, "<<title>>", g.config.RootPath)
+	content = strings.ReplaceAll(content, "<<title>>", s.config.RootPath)
 
 	return content
 }
 
-func (g *Generator) gResponseFile() {
+func (s *Generator) gResponseFile() {
 	var file = &FileInstance{
-		FilePath:    filepath.Join(g.config.RootPath, "core", "response", "response.go"),
+		FilePath:    filepath.Join(s.config.RootPath, "core", "response", "response.go"),
 		FileName:    "response.go",
-		FileContent: g.createResponseContent(),
+		FileContent: s.createResponseContent(),
 	}
 
-	g.FileList = append(g.FileList, file)
+	s.FileList = append(s.FileList, file)
 }
 
-func (g *Generator) createResponseContent() string {
+func (s *Generator) createResponseContent() string {
 	// Read stub
 	data, err := stub.Asset("stub/core/response/response.stub")
 	if err != nil {
@@ -595,14 +602,14 @@ func (g *Generator) createResponseContent() string {
 	return string(data)
 }
 
-func (g *Generator) gResourceRestore() {
-	err := resource.RestoreAssets(g.config.RootPath, "resource/dist")
+func (s *Generator) gResourceRestore() {
+	err := resource.RestoreAssets(s.config.RootPath, "resource/dist")
 	if err != nil {
 		panic(err.Error())
 	}
 }
 
-func (g *Generator) readFile(path string) string {
+func (s *Generator) readFile(path string) string {
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -623,7 +630,7 @@ func (g *Generator) readFile(path string) string {
 	return string(data)
 }
 
-func (g *Generator) contentDiff(oldContent *string, newContent *string) (isNew bool, isDiff bool) {
+func (s *Generator) contentDiff(oldContent *string, newContent *string) (isNew bool, isDiff bool) {
 
 	if *oldContent == "" {
 		isNew = true
@@ -644,10 +651,74 @@ func (g *Generator) contentDiff(oldContent *string, newContent *string) (isNew b
 	return
 }
 
-func (g *Generator) handleFile(file *FileInstance) {
-	oldContent := g.readFile(file.FilePath)
+func (s *Generator) handleFile(file *FileInstance) {
+	oldContent := s.readFile(file.FilePath)
 	file.FileOldContent = oldContent
-	isNew, isDiff := g.contentDiff(&oldContent, &file.FileContent)
+	isNew, isDiff := s.contentDiff(&oldContent, &file.FileContent)
 	file.IsNew = isNew
 	file.IsDiff = isDiff
+}
+
+// 讲代码进行gofmt格式化
+func (s *Generator) fmtCode() error {
+	if len(s.FileList) == 0 {
+		return nil
+	}
+
+	// 创建临时目录
+	dir, err := ioutil.TempDir("/tmp", "temp")
+	if err != nil {
+		log.Printf("create tempdir %v err %v", dir, err)
+		return err
+	}
+	// 处理完移除临时文件
+	defer os.RemoveAll(dir)
+
+	for _, v := range s.FileList {
+		if !strings.HasSuffix(v.FileName, ".go") {
+			continue
+		}
+
+		filePath := strings.Replace(v.FilePath, "/", "_", -1)
+		file := fmt.Sprintf("%v/%v", dir, filePath)
+
+		err := ioutil.WriteFile(file, []byte(v.FileContent), 0644)
+		if err != nil {
+			log.Printf("fmt code write temp file %v err %v", file, err)
+			return err
+		}
+	}
+
+	err = s.gofmt(dir)
+	if err != nil {
+		return err
+	}
+
+	for _, v := range s.FileList {
+		if !strings.HasSuffix(v.FileName, ".go") {
+			continue
+		}
+
+		filePath := strings.Replace(v.FilePath, "/", "_", -1)
+		file := fmt.Sprintf("%v/%v", dir, filePath)
+
+		b, err := ioutil.ReadFile(file)
+		if err != nil {
+			return err
+		}
+		v.FileContent = string(b)
+	}
+
+	return nil
+}
+
+func (s *Generator) gofmt(dir string) error {
+	c := exec.Command("gofmt", "-w", dir)
+	err := c.Run()
+	if err != nil {
+		log.Printf("gofmt err %v", err)
+		return err
+	}
+
+	return nil
 }
