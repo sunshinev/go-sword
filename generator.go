@@ -81,6 +81,7 @@ func (s *Generator) Preview(table string) {
 	s.gCoreFile()       // Core.go
 	s.gRouteFile()      // Route.go
 	s.gModelFile()      // Model
+	s.gConfigFile()     // Config
 	s.gControllerFile() // Controller
 	s.gResponseFile()   // Response
 
@@ -138,15 +139,13 @@ func (s *Generator) Generate(table string, files []string) {
 	s.gResourceRestore()
 }
 
-func (s *Generator) gModelFile() {
-	content := s.createModelContent()
-	file := &FileInstance{
-		FilePath:    filepath.Join(s.config.RootPath, "model", s.TableName+".go"),
-		FileName:    s.TableName + ".go",
-		FileContent: content,
+func (s *Generator) createConfigContent() string {
+	data, err := stub.Asset("stub/config/config.stub")
+	if err != nil {
+		panic(err.Error())
 	}
 
-	s.FileList = append(s.FileList, file)
+	return string(data)
 }
 
 // Create model file content
@@ -163,16 +162,6 @@ import "time"
 	return s.Struc
 }
 
-func (s *Generator) gControllerFile() {
-	var file = &FileInstance{
-		FilePath:    filepath.Join(s.config.RootPath, "controller", s.TableName, s.TableName+".go"),
-		FileName:    s.TableName + ".go",
-		FileContent: s.createControllerContent(),
-	}
-
-	s.FileList = append(s.FileList, file)
-}
-
 // Create model file content
 func (s *Generator) createControllerContent() string {
 	// Read stub
@@ -185,7 +174,8 @@ func (s *Generator) createControllerContent() string {
 	packageName := s.TableName
 	modelStruct := "model." + s.StructName
 	importModel := fmt.Sprintf("%v/%v/%v", s.config.ModuleName, s.config.RootPath, "model")
-	importResponse := fmt.Sprintf("%v/%v/%v", s.config.ModuleName, s.config.RootPath, "core/response")
+	importResponse := fmt.Sprintf("%v/%v/%v", s.config.ModuleName, s.config.RootPath, "response")
+	importConfig := fmt.Sprintf("%v/%v/%v", s.config.ModuleName, s.config.RootPath, "config")
 
 	content := string(data)
 
@@ -193,6 +183,7 @@ func (s *Generator) createControllerContent() string {
 	content = strings.ReplaceAll(content, "<<model_struct>>", modelStruct)
 	content = strings.ReplaceAll(content, "<<import_model>>", importModel)
 	content = strings.ReplaceAll(content, "<<import_response>>", importResponse)
+	content = strings.ReplaceAll(content, "<<import_config>>", importConfig)
 
 	return content
 }
@@ -348,16 +339,6 @@ func (s *Generator) createDetailHtml() string {
 	return content
 }
 
-func (s *Generator) gRouteFile() {
-	var file = &FileInstance{
-		FilePath:    filepath.Join(s.config.RootPath, "route", "route.go"),
-		FileName:    "route.go",
-		FileContent: s.getRouteContent(),
-	}
-
-	s.FileList = append(s.FileList, file)
-}
-
 func (s *Generator) getRouteContent() string {
 	var path = filepath.Join(s.config.RootPath, "route", "route.go")
 
@@ -400,20 +381,25 @@ func (s *Generator) createRouteContent(path string) string {
 	// replace
 	var str = `
 	// Route tag %s
-	http.HandleFunc("/api/%s/list", %s.List(db))
-	http.HandleFunc("/api/%s/delete", %s.Delete(db))
-	http.HandleFunc("/api/%s/detail", %s.Detail(db))
-	http.HandleFunc("/api/%s/create", %s.Create(db))
-	http.HandleFunc("/api/%s/edit", %s.Edit(db))
-	http.HandleFunc("/api/%s/batch_delete", %s.BatchDelete(db))`
+	h.HandleFunc("/api/%s/list", handleError(%s.List))
+	h.HandleFunc("/api/%s/delete", handleError(%s.Delete))
+	h.HandleFunc("/api/%s/detail", handleError(%s.Detail))
+	h.HandleFunc("/api/%s/create", handleError(%s.Create))
+	h.HandleFunc("/api/%s/edit", handleError(%s.Edit))
+	h.HandleFunc("/api/%s/batch_delete", handleError(%s.BatchDelete))`
 
 	str = strings.ReplaceAll(str, "%s", s.TableName)
 
 	var importStr = `"%s/controller/%s"`
 	importStr = fmt.Sprintf(importStr, strings.Join([]string{s.config.ModuleName, s.config.RootPath}, "/"), s.TableName)
 
+	importResponse := fmt.Sprintf("%v/%v/%v", s.config.ModuleName, s.config.RootPath, "response")
+
 	// Check if content repeated,if true then ignore replace
 	content := string(data)
+	content = strings.ReplaceAll(content, "<<import_response>>", importResponse)
+	content = strings.ReplaceAll(content, "<<root_path>>", s.config.RootPath)
+
 	if !strings.Contains(content, str) {
 		content = strings.ReplaceAll(content, "// ----Route-end----", str+`
 	// ----Route-end----`)
@@ -480,25 +466,81 @@ func (s *Generator) createMainContent() string {
 func (s *Generator) gCoreFile() {
 
 	var file = &FileInstance{
-		FilePath:    filepath.Join(s.config.RootPath, "core", "core.go"),
-		FileName:    "core.go",
+		FilePath:    filepath.Join(s.config.RootPath, "sword", "sword.go"),
+		FileName:    "sword.go",
 		FileContent: s.createCoreContent(),
 	}
 
 	s.FileList = append(s.FileList, file)
 }
+
+func (s *Generator) gRouteFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(s.config.RootPath, "route", "route.go"),
+		FileName:    "route.go",
+		FileContent: s.getRouteContent(),
+	}
+
+	s.FileList = append(s.FileList, file)
+}
+
+func (s *Generator) gModelFile() {
+	content := s.createModelContent()
+	file := &FileInstance{
+		FilePath:    filepath.Join(s.config.RootPath, "model", s.TableName+".go"),
+		FileName:    s.TableName + ".go",
+		FileContent: content,
+	}
+
+	s.FileList = append(s.FileList, file)
+}
+
+func (s *Generator) gConfigFile() {
+	content := s.createConfigContent()
+	file := &FileInstance{
+		FilePath:    filepath.Join(s.config.RootPath, "config", "config.go"),
+		FileName:    "config.go",
+		FileContent: content,
+	}
+
+	s.FileList = append(s.FileList, file)
+}
+
+func (s *Generator) gControllerFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(s.config.RootPath, "controller", s.TableName, s.TableName+".go"),
+		FileName:    s.TableName + ".go",
+		FileContent: s.createControllerContent(),
+	}
+
+	s.FileList = append(s.FileList, file)
+}
+
+func (s *Generator) gResponseFile() {
+	var file = &FileInstance{
+		FilePath:    filepath.Join(s.config.RootPath, "response", "response.go"),
+		FileName:    "response.go",
+		FileContent: s.createResponseContent(),
+	}
+
+	s.FileList = append(s.FileList, file)
+}
+
 func (s *Generator) createCoreContent() string {
 	// Read stub
-	data, err := stub.Asset("stub/core/core.stub")
+	data, err := stub.Asset("stub/sword/sword.stub")
 	if err != nil {
 		panic(err.Error())
 	}
 
 	str := strings.Join([]string{s.config.ModuleName, s.config.RootPath, "route"}, "/")
+	importConfigStr := strings.Join([]string{s.config.ModuleName, s.config.RootPath, "config"}, "/")
 
 	content := string(data)
 
 	content = strings.ReplaceAll(content, "<<import_route>>", str)
+	content = strings.ReplaceAll(content, "<<import_config>>", importConfigStr)
+
 	return content
 }
 
@@ -582,19 +624,9 @@ func (s *Generator) createDefaultHtml(path string) string {
 	return content
 }
 
-func (s *Generator) gResponseFile() {
-	var file = &FileInstance{
-		FilePath:    filepath.Join(s.config.RootPath, "core", "response", "response.go"),
-		FileName:    "response.go",
-		FileContent: s.createResponseContent(),
-	}
-
-	s.FileList = append(s.FileList, file)
-}
-
 func (s *Generator) createResponseContent() string {
 	// Read stub
-	data, err := stub.Asset("stub/core/response/response.stub")
+	data, err := stub.Asset("stub/response/response.stub")
 	if err != nil {
 		panic(err.Error())
 	}

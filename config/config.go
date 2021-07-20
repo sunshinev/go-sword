@@ -55,6 +55,7 @@ func (c Config) LoadConfig(configPath string) error {
 
 	return nil
 }
+
 func (c Config) readGoMod() (string, error) {
 	// 获取go.mod文件中的module定义
 	modBody, err := ioutil.ReadFile("go.mod")

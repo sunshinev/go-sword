@@ -46,14 +46,16 @@ func Init(configFile string) *Sword {
 }
 
 func (s *Sword) Run() {
-	// 数据表列表
-	http.HandleFunc("/api/model/table_list", s.handleError(s.tableList))
-	// 预览
-	http.HandleFunc("/api/model/preview", s.handleError(s.Preview))
-	// 创建生成文件
-	http.HandleFunc("/api/model/generate", s.handleError(s.Generate))
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	h := http.NewServeMux()
+	// 数据表列表
+	h.HandleFunc("/api/model/table_list", s.handleError(s.tableList))
+	// 预览
+	h.HandleFunc("/api/model/preview", s.handleError(s.Preview))
+	// 创建生成文件
+	h.HandleFunc("/api/model/generate", s.handleError(s.Generate))
+
+	h.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// 静态文件路由
 		fs := assetfs.AssetFS{
 			Asset:     resource.Asset,
@@ -77,13 +79,13 @@ func (s *Sword) Run() {
 	})
 
 	// Render vue component
-	http.HandleFunc("/render", s.handleError(s.Render))
+	h.HandleFunc("/render", s.handleError(s.Render))
 
 	s.Welcome()
 
-	//Start server
 	go func() {
-		err := http.ListenAndServe(":"+config.GlobalConfig.ServerPort, nil)
+		//Start server
+		err := http.ListenAndServe(":"+config.GlobalConfig.ServerPort, h)
 		if err != nil {
 			log.Fatalf("Go-sword start err: %v", err)
 		}

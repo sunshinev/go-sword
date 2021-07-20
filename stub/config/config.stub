@@ -1,0 +1,51 @@
+package config
+
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+
+	"github.com/jinzhu/gorm"
+)
+
+var GlobalEngineConfig = &Config{}
+var GlobalDbConnect = &gorm.DB{}
+
+type Config struct {
+	Database   *DatabaseConfig `json:"db"`
+	ServerPort string          `json:"server_port"`
+}
+
+type DatabaseConfig struct {
+	Host     string `json:"host"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+	Port     int    `json:"port"`
+	Db       string `json:"db"`
+}
+
+func LoadConfig(configPath string) error {
+	body, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(body, GlobalEngineConfig)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InitDB() {
+	d := GlobalEngineConfig.Database
+	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", d.User,
+		d.Password, d.Host, d.Port, d.Db))
+	if err != nil {
+		log.Fatal("%v", err)
+	}
+
+	GlobalDbConnect = db
+}

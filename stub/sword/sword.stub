@@ -1,0 +1,17 @@
+package sword
+
+import (
+	"<<import_config>>"
+    "<<import_route>>"
+	_ "github.com/go-sql-driver/mysql"
+)
+
+func Run() {
+	err := config.LoadConfig("config/go-sword.json")
+	if err != nil {
+		panic(err)
+	}
+	config.InitDB()
+	// Register route
+	route.Register()
+}

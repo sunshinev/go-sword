@@ -1,322 +1,289 @@
-package <<package_name>>
+package asset_filtertemplate
 
 import (
 	"encoding/json"
-	"<<import_model>>"
-	"<<import_response>>"
+	"errors"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"math"
+	"net/http"
 	"strconv"
 
-	"github.com/jinzhu/gorm"
-	"fmt"
+	"<<import_config>>"
+	"<<import_model>>"
+	"<<import_response>>"
 )
 
-func List(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
-	return func(writer http.ResponseWriter, request *http.Request) {
-		defer func() {
-			if err := recover(); err != nil {
-				msg, _ := json.Marshal(response.Ret{
-					Code: http.StatusInternalServerError,
-					Msg:  fmt.Sprintf("%v", err),
-				})
-				writer.Write(msg)
-			}
-		}()
+func List(writer http.ResponseWriter, request *http.Request) error {
+	db := config.GlobalDbConnect
+	if db == nil {
+		return errors.New("db is nil")
+	}
+	// Get page
+	err := request.ParseForm()
+	if err != nil {
+		return err
+	}
 
-		// Get page
-		err := request.ParseForm()
-		if err != nil {
-			panic(err.Error())
-		}
+	page := request.FormValue("page")
+	if page == "" {
+		page = "1"
+	}
 
-		page := request.FormValue("page")
-		if page == "" {
-			page = "1"
-		}
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		return err
+	}
+	// Get search_data
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		return err
+	}
 
-		pageInt, err := strconv.Atoi(page)
-		if err != nil {
-			panic(err.Error())
-		}
+	filters := &<<model_struct>>{}
+	err = json.Unmarshal(body, &filters)
+	if err != nil {
+		return err
+	}
+	// Get total nums
+	totalNums := 0
+	pageSize := 20
+	table := []<<model_struct>>{}
+	db.Where(filters).Find(&table).Count(&totalNums)
 
-		// Get search_data
-		body, err := ioutil.ReadAll(request.Body)
-		if err != nil {
-			panic(err.Error())
-		}
+	// Compute total_pages
+	totalPages := math.Ceil(float64(totalNums) / float64(pageSize))
 
-		filters := &<<model_struct>>{}
-		err = json.Unmarshal(body, &filters)
-		if err != nil {
-			panic(err.Error())
-		}
+	// Get records
+	records := []<<model_struct>>{}
+	//db.Where(filters).Find(&records)
+	db.Where(filters).Limit(pageSize).Offset((pageInt - 1) * pageSize).Order("created_at desc").Find(&records)
 
-		// Get total nums
-		totalNums := 0
-		pageSize := 20
-		table := []<<model_struct>>{}
-		db.Where(filters).Find(&table).Count(&totalNums)
-
-		// Compute total_pages
-		totalPages := math.Ceil(float64(totalNums) / float64(pageSize))
-
-		// Get records
-		records := []<<model_struct>>{}
-		//db.Where(filters).Find(&records)
-		db.Where(filters).Limit(pageSize).Offset((pageInt-1)*pageSize).Order("created_at desc").Find(&records)
-
-		ret := response.Ret{
-			Code: http.StatusOK,
-			Data: response.List{
-				List: &records,
-				Pagination: response.Pagination{
-					PageSize:    pageSize,
-					TotalNums:   totalNums,
-					TotalPages:  int(totalPages),
-					CurrentPage: pageInt,
-				},
+	ret := response.Ret{
+		Code: http.StatusOK,
+		Data: response.List{
+			List: &records,
+			Pagination: response.Pagination{
+				PageSize:    pageSize,
+				TotalNums:   totalNums,
+				TotalPages:  int(totalPages),
+				CurrentPage: pageInt,
 			},
-		}
-
-		d, err := json.Marshal(&ret)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		_, err = writer.Write(d)
-		if err != nil {
-			panic(err.Error())
-		}
+		},
 	}
+
+	d, err := json.Marshal(&ret)
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(d)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func Delete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
-	return func(writer http.ResponseWriter, request *http.Request) {
-
-	    defer func() {
-            if err := recover(); err != nil {
-                msg, _ := json.Marshal(response.Ret{
-                    Code: http.StatusInternalServerError,
-                    Msg:  fmt.Sprintf("%v", err),
-                })
-                writer.Write(msg)
-            }
-        }()
-
-		body, err := ioutil.ReadAll(request.Body)
-		if err != nil {
-			log.Printf("%v", err)
-			return
-		}
-
-		data := make(map[string]int32)
-		err = json.Unmarshal(body, &data)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		sql := <<model_struct>>{
-			Id: data["id"],
-		}
-
-		db.Delete(&sql)
-
-		ret := response.Ret{
-            Code: http.StatusOK,
-            Msg:  "success",
-        }
-
-		d, err := json.Marshal(&ret)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		_, err = writer.Write(d)
-		if err != nil {
-			panic(err.Error())
-		}
+func Delete(writer http.ResponseWriter, request *http.Request) error {
+	db := config.GlobalDbConnect
+	if db == nil {
+		return errors.New("db is nil")
 	}
+
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		log.Printf("%v", err)
+		return err
+	}
+
+	data := make(map[string]int32)
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return err
+	}
+
+	sql := <<model_struct>>{
+		Id: data["id"],
+	}
+
+	db.Delete(&sql)
+
+	ret := response.Ret{
+		Code: http.StatusOK,
+		Msg:  "success",
+	}
+
+	d, err := json.Marshal(&ret)
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(d)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func Create(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
-	return func(writer http.ResponseWriter, request *http.Request) {
-	    defer func() {
-            if err := recover(); err != nil {
-                msg, _ := json.Marshal(response.Ret{
-                    Code: http.StatusInternalServerError,
-                    Msg:  fmt.Sprintf("%v", err),
-                })
-                writer.Write(msg)
-            }
-        }()
-
-		body, err := ioutil.ReadAll(request.Body)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		data := <<model_struct>>{}
-		err = json.Unmarshal(body, &data)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		db.Create(&data)
-
-		ret := response.Ret{
-            Code: http.StatusOK,
-            Msg:  "success",
-        }
-
-		d, err := json.Marshal(&ret)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		_, err = writer.Write(d)
-		if err != nil {
-			panic(err.Error())
-		}
+func Create(writer http.ResponseWriter, request *http.Request) error {
+	db := config.GlobalDbConnect
+	if db == nil {
+		return errors.New("db is nil")
 	}
+
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		return err
+	}
+
+	data := <<model_struct>>{}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return err
+	}
+
+	db.Create(&data)
+
+	ret := response.Ret{
+		Code: http.StatusOK,
+		Msg:  "success",
+	}
+
+	d, err := json.Marshal(&ret)
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(d)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func Edit(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
-	return func(writer http.ResponseWriter, request *http.Request) {
-	    defer func() {
-            if err := recover(); err != nil {
-                msg, _ := json.Marshal(response.Ret{
-                    Code: http.StatusInternalServerError,
-                    Msg:  fmt.Sprintf("%v", err),
-                })
-                writer.Write(msg)
-            }
-        }()
-
-		body, err := ioutil.ReadAll(request.Body)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		data := <<model_struct>>{}
-		err = json.Unmarshal(body, &data)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		updateData :=  <<model_struct>>{}
-        db.First(&updateData, data.Id)
-        updateData = data
-        db.Save(&updateData)
-
-		ret := response.Ret{
-            Code: http.StatusOK,
-            Msg:  "success",
-            Data: &data,
-        }
-
-		d, err := json.Marshal(&ret)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		_, err = writer.Write(d)
-		if err != nil {
-			panic(err.Error())
-		}
+func Edit(writer http.ResponseWriter, request *http.Request) error {
+	db := config.GlobalDbConnect
+	if db == nil {
+		return errors.New("db is nil")
 	}
+
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		return err
+	}
+
+	data := <<model_struct>>{}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return err
+	}
+
+	updateData := <<model_struct>>{}
+	db.First(&updateData, data.Id)
+	updateData = data
+	db.Save(&updateData)
+
+	ret := response.Ret{
+		Code: http.StatusOK,
+		Msg:  "success",
+		Data: &data,
+	}
+
+	d, err := json.Marshal(&ret)
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(d)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
-func Detail(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
-	return func(writer http.ResponseWriter, request *http.Request) {
-	    defer func() {
-            if err := recover(); err != nil {
-                msg, _ := json.Marshal(response.Ret{
-                    Code: http.StatusInternalServerError,
-                    Msg:  fmt.Sprintf("%v", err),
-                })
-                writer.Write(msg)
-            }
-        }()
-		body, err := ioutil.ReadAll(request.Body)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		log.Printf("%s", body)
-
-		params := make(map[string]int)
-		err = json.Unmarshal(body, &params)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		data := <<model_struct>>{}
-
-		db.First(&data, params["id"])
-
-		ret := response.Ret{
-            Code: http.StatusOK,
-            Msg:  "success",
-            Data: &data,
-        }
-
-		d, err := json.Marshal(&ret)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		_, err = writer.Write(d)
-		if err != nil {
-			panic(err.Error())
-		}
+func Detail(writer http.ResponseWriter, request *http.Request) error {
+	db := config.GlobalDbConnect
+	if db == nil {
+		return errors.New("db is nil")
 	}
+
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("%s", body)
+
+	params := make(map[string]int)
+	err = json.Unmarshal(body, &params)
+	if err != nil {
+		return err
+	}
+
+	data := <<model_struct>>{}
+
+	db.First(&data, params["id"])
+
+	ret := response.Ret{
+		Code: http.StatusOK,
+		Msg:  "success",
+		Data: &data,
+	}
+
+	d, err := json.Marshal(&ret)
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(d)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func BatchDelete(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
-	return func(writer http.ResponseWriter, request *http.Request) {
-
-		defer func() {
-			if err := recover(); err != nil {
-				msg, _ := json.Marshal(response.Ret{
-					Code: http.StatusInternalServerError,
-					Msg:  fmt.Sprintf("%v", err),
-				})
-				writer.Write(msg)
-			}
-		}()
-
-		body, err := ioutil.ReadAll(request.Body)
-		if err != nil {
-			log.Printf("%v", err)
-			return
-		}
-
-		data := []int32{}
-		err = json.Unmarshal(body, &data)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		for _,id := range data{
-			db.Where(<<model_struct>>{Id:id}).Delete(<<model_struct>>{})
-		}
-
-		ret := response.Ret{
-			Code: http.StatusOK,
-			Msg:  "success",
-		}
-
-		d, err := json.Marshal(&ret)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		_, err = writer.Write(d)
-		if err != nil {
-			panic(err.Error())
-		}
+func BatchDelete(writer http.ResponseWriter, request *http.Request) error {
+	db := config.GlobalDbConnect
+	if db == nil {
+		return errors.New("db is nil")
 	}
+
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		log.Printf("%v", err)
+		return err
+	}
+
+	data := []int32{}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return err
+	}
+
+	for _, id := range data {
+		db.Where(<<model_struct>>{Id: id}).Delete(<<model_struct>>{})
+	}
+
+	ret := response.Ret{
+		Code: http.StatusOK,
+		Msg:  "success",
+	}
+
+	d, err := json.Marshal(&ret)
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(d)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
