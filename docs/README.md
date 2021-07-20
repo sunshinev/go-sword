@@ -15,8 +15,6 @@ Go-sword 其实提供了一种模式，这种模式借鉴于Yii框架的GII工�
 
 Go-sword 内部的代码包括前端、后端并非最优解，正如前面所说的，它本身提供了一种快速便捷的开发方式，如果开发者觉得这种模式有利于项目效率，可以Fork该项目，修改stub文件来满足自己的项目架构
 
-
-
 ## 官网
 [https://sunshinev.github.io/go-sword-home/](https://sunshinev.github.io/go-sword-home/)
 
