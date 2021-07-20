@@ -1,10 +1,11 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/jinzhu/gorm"
 )
@@ -13,16 +14,16 @@ var GlobalEngineConfig = &Config{}
 var GlobalDbConnect = &gorm.DB{}
 
 type Config struct {
-	Database   *DatabaseConfig `json:"db"`
-	ServerPort string          `json:"server_port"`
+	Database   *DatabaseConfig `yaml:"db"`
+	ServerPort string          `yaml:"server_port"`
 }
 
 type DatabaseConfig struct {
-	Host     string `json:"host"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Port     int    `json:"port"`
-	Db       string `json:"db"`
+	Host     string `yaml:"host"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Port     int    `yaml:"port"`
+	Db       string `yaml:"database"`
 }
 
 func LoadConfig(configPath string) error {
@@ -31,7 +32,7 @@ func LoadConfig(configPath string) error {
 		return err
 	}
 
-	err = json.Unmarshal(body, GlobalEngineConfig)
+	err = yaml.Unmarshal(body, GlobalEngineConfig)
 	if err != nil {
 		return err
 	}

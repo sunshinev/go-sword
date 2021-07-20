@@ -6,8 +6,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func Run() {
-	err := config.LoadConfig("config/go-sword.json")
+func Run(conf string) {
+	err := config.LoadConfig(conf)
 	if err != nil {
 		panic(err)
 	}

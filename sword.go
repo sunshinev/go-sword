@@ -37,7 +37,7 @@ func init() {
 
 func Init(configFile string) *Sword {
 	// 初始化配置
-	err := config.Config{}.LoadConfig(configFile)
+	err := config.LoadConfig(configFile)
 
 	if err != nil {
 		log.Fatalf("sword init err %v", err)
@@ -249,11 +249,13 @@ func (s *Sword) Render(writer http.ResponseWriter, request *http.Request) error 
 
 func (s *Sword) Welcome() {
 	c := config.GlobalConfig
-	str := "Go-Sword will create new project named " + c.RootPath + " in current directory" +
-		"\n\n[Server info]" +
+	str := "\nSTART----------------------------------------\n" +
+		"Go-Sword will create new project named " + c.
+		RootPath + " in current directory" +
+		"\n[Server info]" +
 		"\nServer port : " + c.ServerPort +
 		"\nProject module : " + c.RootPath +
-		"\n\n[db info]" +
+		"\n[db info]" +
 		"\nMySQL host : " + c.DatabaseSet.Host +
 		"\nMySQL port : " + strconv.Itoa(c.DatabaseSet.Port) +
 		"\nMySQL user : " + c.DatabaseSet.User +
@@ -261,7 +263,7 @@ func (s *Sword) Welcome() {
 		"\n\nStart successful, server is running ...\n" +
 		"Please request: " +
 		strings.Join([]string{"http://localhost:", c.ServerPort}, "") +
-		"\n"
+		"\nEND----------------------------------------\n"
 
 	fmt.Println(str)
 }

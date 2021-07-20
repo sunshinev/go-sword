@@ -2,36 +2,37 @@ package config
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 // App global config
 var GlobalConfig *Config
 
 type Config struct {
-	DatabaseSet DbSet  `json:"db"`        // MySQL config
-	RootPath    string `json:"root_path"` // The directory go-sword store new file
+	DatabaseSet DbSet  `yaml:"db"`        // MySQL config
+	RootPath    string `yaml:"root_path"` // The directory go-sword store new file
 	ModuleName  string // Project go mod module name
-	ServerPort  string `json:"server_port"` // Go-sword server port
+	ServerPort  string `yaml:"tool_port"` // Go-sword server port
 	DbConn      *sql.DB
 }
 
 type DbSet struct {
-	Host     string `json:"host"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Port     int    `json:"port"`
-	Database string `json:"database"`
+	Host     string `yaml:"host"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Port     int    `yaml:"port"`
+	Database string `yaml:"database"`
 }
 
-func (c Config) LoadConfig(configPath string) error {
-	modName, err := c.readGoMod()
+func LoadConfig(configPath string) error {
+	modName, err := readGoMod()
 	if err != nil {
 		log.Fatalf("read go mod err %v", err)
 	}
@@ -42,7 +43,7 @@ func (c Config) LoadConfig(configPath string) error {
 	}
 
 	conf := Config{}
-	err = json.Unmarshal(body, &conf)
+	err = yaml.Unmarshal(body, &conf)
 	if err != nil {
 		return err
 	}
@@ -51,12 +52,12 @@ func (c Config) LoadConfig(configPath string) error {
 	conf.ModuleName = modName
 	GlobalConfig = &conf
 
-	c.initDbConnect()
+	initDbConnect()
 
 	return nil
 }
 
-func (c Config) readGoMod() (string, error) {
+func readGoMod() (string, error) {
 	// 获取go.mod文件中的module定义
 	modBody, err := ioutil.ReadFile("go.mod")
 	if err != nil {
@@ -76,7 +77,7 @@ func (c Config) readGoMod() (string, error) {
 	return "", errors.New("parse `module` from go.mod error")
 }
 
-func (c Config) initDbConnect() {
+func initDbConnect() {
 	dbc := GlobalConfig.DatabaseSet
 	// user:password@(localhost)/dbname?charset=utf8&parseTime=True&loc=Local
 	db, err := sql.Open("mysql", dbc.User+":"+dbc.Password+"@tcp("+dbc.Host+":"+strconv.Itoa(dbc.Port)+")/"+dbc.Database+"?&parseTime=True")

@@ -394,10 +394,12 @@ func (s *Generator) createRouteContent(path string) string {
 	importStr = fmt.Sprintf(importStr, strings.Join([]string{s.config.ModuleName, s.config.RootPath}, "/"), s.TableName)
 
 	importResponse := fmt.Sprintf("%v/%v/%v", s.config.ModuleName, s.config.RootPath, "response")
+	importConfigStr := strings.Join([]string{s.config.ModuleName, s.config.RootPath, "config"}, "/")
 
 	// Check if content repeated,if true then ignore replace
 	content := string(data)
 	content = strings.ReplaceAll(content, "<<import_response>>", importResponse)
+	content = strings.ReplaceAll(content, "<<import_config>>", importConfigStr)
 	content = strings.ReplaceAll(content, "<<root_path>>", s.config.RootPath)
 
 	if !strings.Contains(content, str) {
