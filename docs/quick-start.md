@@ -1,38 +1,60 @@
-# 快速开始
+## 安装须知
+在整个文档中，将使用Gin框架作为演示，Go-sword工具本身可以适用于任意Golang框架
 
-## 安装
-
-```text
+## 安装依赖包
+```
 go get -u  github.com/sunshinev/go-sword
 ```
 
-## 编译
+## 启动Go-sword 工具
 
-```text
-go build
+使用`gosword.Init`加载配置文件，并且在项目中开启工具；
+该命令会解析yaml配置文件中的数据库配置，以及启动端口，并且在对应端口启动服务
+```
+gosword.Init("config/go-sword.yaml").Run()
 ```
 
-安装完成后，确保`go-sword`命令在`GOPATH/bin`目录下，可执行
+在项目中的main函数中，import依赖包，开启工具，参考代码如下：
+```
+package main
 
-## 启动服务
+import (
+	"log"
 
-```text
-go-sword -db {db_database} -password {db_password} -user {db_uesr} -module {module_name}
+	"github.com/app/admin22/sword"
+	"github.com/gin-gonic/gin"
+	gosword "github.com/sunshinev/go-sword"
+)
+
+func main() {
+	r := gin.Default()
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
+
+	// 这里我们可以调整日志的详细程度
+	log.SetFlags(log.Llongfile | log.Ldate)
+
+	// 核心注意：这里通过该命令，加载配置文件，并且启动服务
+	gosword.Init("config/go-sword.yaml").Run()
+
+	// 原始gin项目
+	_ = r.Run()
+}
 ```
 
-例如：`go-sword -db blog -password 123456 -user root -module go-sword-app`
 
-以上命令，就是连接数据库`blog`，用户名`root`,密码`12345`,在go-sword命令的当前目录下创建项目`go-sword-app`
+## 控制台输出
+如果配置成功，那么控制台会打印如下信息
 
-启动成功的提示
-
-```text
-Go-Sword will create new project named go-sword-app in current directory
-
+```
+START----------------------------------------
+Go-Sword will create new project named admin22 in current directory
 [Server info]
-Server port : 8080
-Project module : go-sword-app
-
+Server port : 8081
+Project module : admin22
 [db info]
 MySQL host : localhost
 MySQL port : 3306
@@ -40,54 +62,13 @@ MySQL user : root
 MySQL password : 123456
 
 Start successful, server is running ...
-Please request: http://localhost:8080
+Please request: http://localhost:8081
+END----------------------------------------
 ```
 
-### 参数说明
 
-```text
-+---------------------------------------------------+
-|                                                   |
-|            Welcome to use Go-Sword                |
-|                                                   |
-|                Visualized tool                    |
-|        Fastest to create CRUD background          |
-|      https://github.com/sunshinev/go-sword        |
-|                                                   |
-+---------------------------------------------------+
-Usage of go-sword:
-  // 要连接的数据库信息
-  -db string
-      MySQL database
-  -host string
-      MySQL Host (default "localhost")
-  // 重要：module参数单独作解释
-  -module string
-      New project module, the same as  'module' in go.mod file.   (default "go-sword-app/")
-  // go-sword 服务启动的默认端口
-  -p string
-      Go-sword Server port (default "8080")
-  -password string
-      MySQL password
-  -port int
-      MySQL port (default 3306)
-  -user string
-      MySQL user
-```
+## 工具页面
 
-### 参数：  -module
+点击链接，即可以在本地启动该工具
 
-`-module` 参数是代表要创建的项目名称，同时也是新项目`go.mod`文件中的`module`字段的值，这点请务必保持一致。
-
-### 注意
-
-新项目会在运行`go-sword`命令的当前目录下，直接创建`module`目录，作为新项目
-
-## 开始使用服务
-
-```text
-Start successful, server is running ...
-Please request: http://localhost:8080
-```
-
-根据服务启动的提示，直接点击`http://localhost:8080`即可进入web的可视化工具页面
+![136e8b44d5d4acf00d5a63125928bd731587996269.jpg](https://cdn.jsdelivr.net/gh/sunshinev/remote_pics/136e8b44d5d4acf00d5a63125928bd731587996269.jpg)
