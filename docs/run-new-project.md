@@ -45,7 +45,7 @@ import (
 
 	"github.com/app/admin22/sword"
 	"github.com/gin-gonic/gin"
-	gosword "github.com/sunshinev/go-sword"
+	gosword "github.com/sunshinev/go-sword/v2"
 )
 
 func main() {
