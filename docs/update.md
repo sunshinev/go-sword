@@ -10,4 +10,7 @@
 5. 创建代码截断，使用`gofmt`工具来格式化所有释放的Go代码文件
 
 ### V1.0.0
-无
+1. 底层db转换struct进行了重写
+2. 使用切片代替map，解决字段排序问题
+3. 服务启动进行了重写，添加config包来解决全局配置GlobalConfig
+4. 调整后的结构体主要有int32/string/float64/time.Time四种类型

@@ -25,8 +25,10 @@ Go-sword 内部的代码包括前端、后端并非最优解，正如前面所�
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/sunshinev/go-sword) ![GitHub](https://img.shields.io/github/license/sunshinev/go-sword) ![GitHub repo size](https://img.shields.io/github/repo-size/sunshinev/go-sword) ![GitHub stars](https://img.shields.io/github/stars/sunshinev/go-sword?style=social) ![GitHub forks](https://img.shields.io/github/forks/sunshinev/go-sword?style=social)
 
+## 欢迎入群 
+QQ：690393633
 
-## 界面预览
+## 工具
 ![136e8b44d5d4acf00d5a63125928bd731587996269.jpg](https://cdn.jsdelivr.net/gh/sunshinev/remote_pics/136e8b44d5d4acf00d5a63125928bd731587996269.jpg)
 
 
