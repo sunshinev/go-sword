@@ -64,11 +64,8 @@ func readGoMod() (string, error) {
 		return "", err
 	}
 
-	log.Printf("%s", modBody)
-
 	r := regexp.MustCompile(`module (.*)\n`)
 	x := r.FindStringSubmatch(string(modBody))
-	log.Printf("%v", x)
 
 	if len(x) == 2 {
 		return x[1], nil
