@@ -1,0 +1,233 @@
+<style>
+
+    .ivu-table .demo-table-info-cell-name {
+        background-color: #2db7f5;
+        color: #fff;
+    }
+
+    .ivu-table .demo-table-info-cell-age {
+        background-color: #ff6600;
+        color: #fff;
+    }
+
+    .ivu-table .demo-table-info-cell-address {
+        background-color: #187;
+        color: #fff;
+    }
+</style>
+<template>
+    <i-layout style="padding:50px 0;height: 80vh;">
+        <i-row>
+            <i-col span="12">
+                <i-form :label-width="200" method="post">
+                    <i-form-item label="MySQL table">
+                        <i-auto-complete :data="table_list" v-model="table_name" @on-select="selectTable()"
+                                         placeholder="Click here ..."></i-auto-complete>
+                    </i-form-item>
+                    <i-form-item>
+                        <i-button type="primary" @click="preview">Preview</i-button>
+                        <i-button type="success" @click="generate" :disabled="is_disabled_generate_btn">Generate
+                        </i-button>
+                    </i-form-item>
+                </i-form>
+            </i-col>
+        </i-row>
+        <i-row>
+            <i-col span="20">
+                <div style="text-align: right">
+                    <i-button type="warning" @click="handleSelect('diff')">Select diff files</i-button>
+                    <i-button type="info" @click="handleSelect('new')">Select new files</i-button>
+                    <i-button type="success" @click="handleSelect('diffnew')">Select diff & new</i-button>
+                    <i-button @click="handleSelectAll(true)">Select all</i-button>
+                    <i-button @click="handleSelectAll(false)">Unselect all</i-button>
+                </div>
+                <br>
+                <i-table :columns="table_col" :data="table_data" ref="selection"
+                         @on-selection-change="table_selection_change">
+                    <template slot-scope="{ row, index }" slot="table_button">
+                        <i-button type="info" size="small" @click="openModal(index)">Detail</i-button>
+                        <template v-if="row.is_diff">
+                            <i-button type="warning" size="small" @click="openDiffModal(index)">diff</i-button>
+                        </template>
+                    </template>
+                    <template slot-scope="{ row, index }" slot="select">
+                        <Checkbox v-model="single">Checkbox</Checkbox>
+                    </template>
+                </i-table>
+            </i-col>
+        </i-row>
+        <i-modal v-model="is_show_detail_model" :title="detail_model_title" width="80">
+            <pre style="color: white;padding: 20px;background: black"><code v-text="detail_model_content"></code></pre>
+        </i-modal>
+        <i-modal v-model="is_show_diff_model" :title="diff_model_title" width="80">
+            <code-diff :old-string="file_old_content" :new-string="file_new_content" :context="10"/>
+        </i-modal>
+
+    </i-layout>
+</template>
+<script type="text/javascript">
+    module.exports = {
+        data: function () {
+            return {
+                file_old_content: "",
+                file_new_content: "",
+                is_show_diff_model: false,
+                diff_model_title: "",
+                table_list: [],
+                table_name: '',
+                table_col: [
+                    {
+                        type: 'index',
+                        width: 60,
+                        align: 'center'
+                    },
+                    {
+                        title: 'path',
+                        key: 'file_path',
+                    },
+                    {
+                        title: 'operation',
+                        slot: "table_button",
+                        width: 200,
+                    },
+                    {
+                        type: 'selection',
+                        width: 60,
+                        align: 'center'
+                    },
+                ],
+                table_data: [],
+                waitingfiles: [],
+                is_show_detail_model: false,
+                detail_model_content: '',
+                detail_model_title: '',
+                is_disabled_generate_btn: true,
+            }
+        },
+        methods: {
+            getTableList: function () {
+                let that = this
+
+                this.axios
+                    .post('/api/model/table_list')
+                    .then(response => {
+                        if (response.data.code == 200) {
+                            that.table_list = response.data.data.list
+                        } else {
+                            alert(response.data.msg)
+                        }
+                    })
+            },
+            handleTableData: function (tableData) {
+                for (i in tableData) {
+                    if (tableData[i].is_new) {
+                        tableData[i]['cellClassName'] = {file_path: 'demo-table-info-cell-name'};
+                    } else if (tableData[i].is_diff) {
+                        tableData[i]['cellClassName'] = {file_path: 'demo-table-info-cell-age'};
+                    }
+                }
+                this.table_data = tableData
+                console.info(this.table_data)
+            },
+            preview: function () {
+                let that = this
+
+                if (this.table_name === "") {
+                    alert("Please choose MySQL table");
+                    return
+                }
+
+                this.axios
+                    .post('/api/model/preview', {table_name: this.table_name})
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            that.handleTableData(response.data.data.list)
+                            that.is_disabled_generate_btn = false;
+                        } else {
+                            alert(response.data.msg)
+                        }
+                    })
+            },
+            generate: function () {
+                if (this.waitingfiles.length === 0) {
+                    alert("Please choose files!")
+                    return
+                }
+
+                if (this.table_name === "") {
+                    alert("Please choose MySQL table");
+                    return
+                }
+
+                let that = this
+                this.axios
+                    .post('/api/model/generate', {table_name: this.table_name, files: this.waitingfiles})
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            let list = response.data.data.list
+                            for (var i in list) {
+                                this.$Message.success("Generate success:" + list[i].file_path)
+                            }
+                        } else {
+                            alert(response.data.msg)
+                        }
+                    })
+            },
+            openModal(index) {
+                this.detail_model_content = this.table_data[index].file_content
+                this.detail_model_title = this.table_data[index].file_path
+                this.is_show_detail_model = true
+            },
+            openDiffModal(index) {
+                this.file_new_content = this.table_data[index].file_content
+                this.file_old_content = this.table_data[index].file_old_content
+                this.is_show_diff_model = true
+                this.diff_model_title = this.table_data[index].file_path
+            },
+            handleSelect(status) {
+                this.handleSelectAll(false)
+
+                if (status === "diff") {
+                    for (var i in  this.table_data) {
+                        if (this.table_data[i].is_diff) {
+                            this.$refs.selection.toggleSelect(i)
+                        }
+                    }
+                }
+
+                if (status === "new") {
+                    for (var i in  this.table_data) {
+                        if (this.table_data[i].is_new) {
+                            this.$refs.selection.toggleSelect(i)
+                        }
+                    }
+                }
+
+                if (status === "diffnew") {
+                    for (var i in  this.table_data) {
+                        if (this.table_data[i].is_new || this.table_data[i].is_diff) {
+                            this.$refs.selection.toggleSelect(i)
+                        }
+                    }
+                }
+            },
+            handleSelectAll(status) {
+                this.$refs.selection.selectAll(status);
+
+            },
+            table_selection_change(rows) {
+                this.waitingfiles = []
+                for (var i in rows) {
+                    this.waitingfiles.push(rows[i].file_path);
+                }
+            },
+            selectTable() {
+                console.info(2)
+                this.is_disabled_generate_btn = true
+            }
+        },
+        mounted: function () {
+            this.getTableList()
+        }
+    }
+</script>
