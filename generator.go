@@ -10,12 +10,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sunshinev/go-sword/config"
+	"github.com/sunshinev/go-sword/v2/config"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/sunshinev/go-sword/assets/resource"
-	"github.com/sunshinev/go-sword/assets/stub"
-	"github.com/sunshinev/go-sword/utils"
+	"github.com/sunshinev/go-sword/v2/assets/resource"
+	"github.com/sunshinev/go-sword/v2/assets/stub"
+	"github.com/sunshinev/go-sword/v2/utils"
 )
 
 type Generator struct {
