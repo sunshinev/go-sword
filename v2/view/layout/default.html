@@ -1,0 +1,89 @@
+<style scoped>
+    .layout-nav {
+        width: 420px;
+        margin: 0 auto;
+        margin-right: 20px;
+        color: white;
+    }
+
+    .layout-logo {
+        border-radius: 3px;
+        float: left;
+    }
+    
+    .layout-footer-center {
+        text-align: center;
+        position: relative;
+        bottom: 0px;
+    }
+</style>
+<template>
+    <i-layout>
+        <i-header :style="{background:'#000'}">
+            <i-menu mode="horizontal" theme="dark" active-name="1" :style="{background:'#000'}">
+                <h2 class="layout-logo" style="color:white;">Go-sword</h2>
+                <div class="layout-nav">
+                </div>
+            </i-menu>
+        </i-header>
+        <i-layout>
+            <i-sider hide-trigger breakpoint="md" :style="{background:'#fff'}">
+                <i-menu theme="light" width="auto">
+                    <template v-for="item in menu">
+                        <i-menu-item v-if="typeof(item.sub_menu) == 'undefined'" :name="item.name">
+                            <i-icon :type="item.icon"></i-icon>
+                            <router-link :to="getRoutePath(item.name)" tag="span">{{item.title}}</router-link>
+                        </i-menu-item>
+                        <i-submenu v-if="typeof(item.sub_menu) != 'undefined'">
+                            <template slot="title">
+                                <i-icon :type="item.icon"></i-icon>{{item.title}}
+                            </template>
+                            <i-menu-item v-for="sub in item.sub_menu" :name="sub.name">
+                                <router-link :to="getRoutePath(sub.name)" tag="span">{{sub.title}}</router-link>
+                            </i-menu-item>
+                        </i-submenu>
+                    </template>
+                </i-menu>
+            </i-sider>
+            <i-content :style="{padding: '0 24px 24px'}">
+                <router-view></router-view>
+            </i-content>
+        </i-layout>
+        <i-footer class="layout-footer-center">Go-sword &copy;  https://github.com/sunshinev/go-sword author:jaysun</i-footer>
+    </i-layout>
+</template>
+<script>
+    module.exports = {
+        data: function () {
+            return {
+                // config global menu list
+                menu: [{
+                    icon: 'ios-people',
+                    title: 'Generate',
+                    name: 'model'
+                }],
+                // config global routes
+                routes: [{
+                    path: '*',
+                    redirect: {name: 'model'}
+                }, {
+                    name: 'model',
+                    path: '/model',
+                    url: '/render?path=/layout/model'
+                }]
+            }
+        },
+        computed: {},
+        methods: {
+            getRoutePath: function (name) {
+                var routes = this.routes
+                for (var i in routes) {
+                    if (name == routes[i].name) {
+                        return routes[i].path
+                    }
+                }
+                return ''
+            }
+        }
+    }
+</script>
