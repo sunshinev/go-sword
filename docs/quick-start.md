@@ -3,7 +3,7 @@
 
 ## 安装依赖包
 ```
-go get -u  github.com/sunshinev/go-sword
+go get -u github.com/sunshinev/go-sword/v2
 ```
 
 ## 启动Go-sword 工具
