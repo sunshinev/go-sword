@@ -52,14 +52,6 @@ func Register() {
 	h.HandleFunc("/render", render)
 	// ----Route-begin----
 
-	// Route tag asset_filtertemplate
-	h.HandleFunc("/api/asset_filtertemplate/list", handleError(asset_filtertemplate.List))
-	h.HandleFunc("/api/asset_filtertemplate/delete", handleError(asset_filtertemplate.Delete))
-	h.HandleFunc("/api/asset_filtertemplate/detail", handleError(asset_filtertemplate.Detail))
-	h.HandleFunc("/api/asset_filtertemplate/create", handleError(asset_filtertemplate.Create))
-	h.HandleFunc("/api/asset_filtertemplate/edit", handleError(asset_filtertemplate.Edit))
-	h.HandleFunc("/api/asset_filtertemplate/batch_delete", handleError(asset_filtertemplate.BatchDelete))
-
 	// ----Route-end----
 
 	go func() {

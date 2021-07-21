@@ -1,4 +1,4 @@
-package asset_filtertemplate
+package <<package_name>>
 
 import (
 	"encoding/json"
