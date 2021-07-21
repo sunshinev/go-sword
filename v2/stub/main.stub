@@ -1,0 +1,27 @@
+package xx
+
+import (
+	"<<import_core>>"
+	"log"
+)
+
+func main() {
+
+	e := core.Engine{
+		Config: &core.Config{
+			Database: &core.DbSet{
+				Host:     "<<db_host>>",
+				User:     "<<db_user>>",
+				Password: "<<db_password>>",
+				Port:     <<db_port>>,
+				Database: "<<db_database>>",
+			},
+            ServerPort: 8082,
+		},
+	}
+
+	err := e.Run()
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+}
