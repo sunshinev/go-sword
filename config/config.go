@@ -2,61 +2,82 @@ package config
 
 import (
 	"database/sql"
-	"flag"
+	"errors"
+	"io/ioutil"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 // App global config
 var GlobalConfig *Config
 
 type Config struct {
-	DatabaseSet DbSet  // MySQL config
-	RootPath    string // The directory go-sword store new file
+	DatabaseSet DbSet  `yaml:"db"`        // MySQL config
+	RootPath    string `yaml:"root_path"` // The directory go-sword store new file
 	ModuleName  string // Project go mod module name
-	ServerPort  string // Go-sword server port
+	ServerPort  string `yaml:"tool_port"` // Go-sword server port
 	DbConn      *sql.DB
 }
 
 type DbSet struct {
-	Host     string
-	User     string
-	Password string
-	Port     int
-	Database string
+	Host     string `yaml:"host"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Port     int    `yaml:"port"`
+	Database string `yaml:"database"`
 }
 
-func (c Config) InitConfig() {
-
-	var dbHost = flag.String("host", "localhost", "MySQL Host")
-	var dbUser = flag.String("user", "", "MySQL user")
-	var dbPassword = flag.String("password", "", "MySQL password")
-	var dbDatabase = flag.String("db", "", "MySQL database ")
-	var dbPort = flag.Int("port", 3306, "MySQL port")
-	var serverPort = flag.String("p", "8080", "Go-sword Server port")
-	var rootPath = flag.String("module", "go-sword-app/", "New project module, the same as  'module' in go.mod file.  ")
-
-	flag.Parse()
-
-	GlobalConfig = &Config{
-		ServerPort: *serverPort,
-		DatabaseSet: DbSet{
-			Host:     *dbHost,
-			User:     *dbUser,
-			Password: *dbPassword,
-			Port:     *dbPort,
-			Database: *dbDatabase,
-		},
-		ModuleName: "github.com/sunshinev/go-sword",
-		RootPath:   strings.TrimRight(*rootPath, "/"),
+func LoadConfig(configPath string) error {
+	modName, err := readGoMod()
+	if err != nil {
+		log.Fatalf("read go mod err %v", err)
 	}
 
-	// Init MySQL connection
-	c.initDbConnect()
+	body, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return err
+	}
+
+	conf := Config{}
+	err = yaml.Unmarshal(body, &conf)
+	if err != nil {
+		return err
+	}
+
+	conf.RootPath = strings.TrimRight(conf.RootPath, "/")
+	conf.ModuleName = modName
+	GlobalConfig = &conf
+
+	initDbConnect()
+
+	return nil
 }
 
-func (c Config) initDbConnect() {
+func readGoMod() (string, error) {
+	// 获取go.mod文件中的module定义
+	modBody, err := ioutil.ReadFile("go.mod")
+	if err != nil {
+		return "", err
+	}
+
+	log.Printf("%s", modBody)
+
+	r := regexp.MustCompile(`module (.*)\n`)
+	x := r.FindStringSubmatch(string(modBody))
+	log.Printf("%v", x)
+
+	if len(x) == 2 {
+		return x[1], nil
+	}
+
+	return "", errors.New("parse `module` from go.mod error")
+}
+
+func initDbConnect() {
 	dbc := GlobalConfig.DatabaseSet
 	// user:password@(localhost)/dbname?charset=utf8&parseTime=True&loc=Local
 	db, err := sql.Open("mysql", dbc.User+":"+dbc.Password+"@tcp("+dbc.Host+":"+strconv.Itoa(dbc.Port)+")/"+dbc.Database+"?&parseTime=True")

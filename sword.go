@@ -1,8 +1,9 @@
-package core
+package gosword
 
 import (
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -10,14 +11,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sunshinev/go-sword/config"
-
 	assetfs "github.com/elazarl/go-bindata-assetfs"
-	"github.com/sunshinev/go-sword/assets/resource"
-
-	"github.com/sunshinev/go-sword/assets/view"
-
 	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/sunshinev/go-sword/v2/assets/resource"
+	"github.com/sunshinev/go-sword/v2/assets/view"
+	"github.com/sunshinev/go-sword/v2/config"
 )
 
 type gZipWriter struct {
@@ -32,22 +31,32 @@ func (u *gZipWriter) Write(p []byte) (int, error) {
 type Sword struct {
 }
 
-func Init() *Sword {
-	// 初始化配置
-	config.Config{}.InitConfig()
+func init() {
+	log.SetFlags(log.Ldate | log.Llongfile)
+}
 
+func Init(configFile string) *Sword {
+	// 初始化配置
+	err := config.LoadConfig(configFile)
+
+	if err != nil {
+		log.Fatalf("sword init err %v", err)
+	}
 	return &Sword{}
 }
 
 func (s *Sword) Run() {
-	// Default Route
-	http.HandleFunc("/api/model/table_list", s.tableList)
-	http.HandleFunc("/api/model/preview", s.Preview)
-	http.HandleFunc("/api/model/generate", s.Generate)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	h := http.NewServeMux()
+	// 数据表列表
+	h.HandleFunc("/api/model/table_list", s.handleError(s.tableList))
+	// 预览
+	h.HandleFunc("/api/model/preview", s.handleError(s.Preview))
+	// 创建生成文件
+	h.HandleFunc("/api/model/generate", s.handleError(s.Generate))
 
-		//Static file route
+	h.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// 静态文件路由
 		fs := assetfs.AssetFS{
 			Asset:     resource.Asset,
 			AssetDir:  resource.AssetDir,
@@ -70,14 +79,33 @@ func (s *Sword) Run() {
 	})
 
 	// Render vue component
-	http.HandleFunc("/render", s.Render)
+	h.HandleFunc("/render", s.handleError(s.Render))
 
 	s.Welcome()
 
-	// Start server
-	err := http.ListenAndServe(":"+config.GlobalConfig.ServerPort, nil)
-	if err != nil {
-		log.Fatalf("Go-sword start err: %v", err)
+	go func() {
+		//Start server
+		err := http.ListenAndServe(":"+config.GlobalConfig.ServerPort, h)
+		if err != nil {
+			log.Fatalf("Go-sword start err: %v", err)
+		}
+	}()
+}
+
+func (s *Sword) handleError(h func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter,
+	r *http.Request) {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("panic %v", err)
+			}
+		}()
+
+		err := h(w, r)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+		}
 	}
 }
 
@@ -87,10 +115,10 @@ type GenerateParams struct {
 }
 
 // Get database table list
-func (s *Sword) tableList(w http.ResponseWriter, r *http.Request) {
+func (s *Sword) tableList(w http.ResponseWriter, r *http.Request) error {
 	rows, err := config.GlobalConfig.DbConn.Query("SHOW TABLES")
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	tables := []string{}
@@ -110,24 +138,26 @@ func (s *Sword) tableList(w http.ResponseWriter, r *http.Request) {
 
 	_, err = w.Write(jsonData)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
+
+	return nil
 }
 
-func (s *Sword) Preview(w http.ResponseWriter, r *http.Request) {
+func (s *Sword) Preview(w http.ResponseWriter, r *http.Request) error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	var data map[string]string
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	if data["table_name"] == "" {
-		panic("tableName is empty")
+		return errors.New("tableName is empty")
 	}
 
 	g := Generator{}.Init()
@@ -140,37 +170,38 @@ func (s *Sword) Preview(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 	_, err = w.Write(ret)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
+	return nil
 }
 
-func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
+func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	var data = &GenerateParams{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	if data.TableName == "" {
-		panic("tableName is empty")
+		return errors.New("tableName is empty")
 	}
 
 	if len(data.Files) == 0 {
-		panic("Files is empty")
+		return errors.New("Files is empty")
 	}
 
 	g := Generator{}.Init()
-	g.Generate(s, data.TableName, data.Files)
+	g.Generate(data.TableName, data.Files)
 
 	ret, err := json.Marshal(Ret{
 		Code: http.StatusOK,
@@ -181,56 +212,50 @@ func (s *Sword) Generate(w http.ResponseWriter, r *http.Request) {
 
 	_, err = w.Write(ret)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
+	return nil
 }
 
-func (s *Sword) Render(writer http.ResponseWriter, request *http.Request) {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Printf("panic %v", err)
-		}
-	}()
+func (s *Sword) Render(writer http.ResponseWriter, request *http.Request) error {
+
 	// 解析参数，映射到文件
 	err := request.ParseForm()
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	path := request.FormValue("path")
 
 	if path == "" {
-		panic("lose path param")
+		return errors.New("lose path param")
 	}
 
 	// 从view目录中寻找文件
-	//body := s.readFile("view" + path + ".html")
+	// body,err := ioutil.ReadFile("view/"+path+".html")
+	// 这里使用go-bindata释放到views目录，通过go文件加载资源，少了文件读写；使用bindata每次修改完html文件之后，需要重新生成views资源
 	body, err := view.Asset("view" + path + ".html")
-
+	if err != nil {
+		return err
+	}
 	_, err = writer.Write(body)
-
 	if err != nil {
-		panic(err.Error())
-	}
-}
-
-func (s *Sword) readFile(path string) []byte {
-	body, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
-	return body
+	return nil
 }
 
 func (s *Sword) Welcome() {
 	c := config.GlobalConfig
-	str := "Go-Sword will create new project named " + c.RootPath + " in current directory" +
-		"\n\n[Server info]" +
+	str := "\nSTART----------------------------------------\n" +
+		"Go-Sword will create new project named " + c.
+		RootPath + " in current directory" +
+		"\n[Server info]" +
 		"\nServer port : " + c.ServerPort +
 		"\nProject module : " + c.RootPath +
-		"\n\n[db info]" +
+		"\n[db info]" +
 		"\nMySQL host : " + c.DatabaseSet.Host +
 		"\nMySQL port : " + strconv.Itoa(c.DatabaseSet.Port) +
 		"\nMySQL user : " + c.DatabaseSet.User +
@@ -238,7 +263,7 @@ func (s *Sword) Welcome() {
 		"\n\nStart successful, server is running ...\n" +
 		"Please request: " +
 		strings.Join([]string{"http://localhost:", c.ServerPort}, "") +
-		"\n"
+		"\nEND----------------------------------------\n"
 
 	fmt.Println(str)
 }

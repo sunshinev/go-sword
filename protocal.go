@@ -1,4 +1,4 @@
-package core
+package gosword
 
 type Ret struct {
 	Code int         `json:"code"`
